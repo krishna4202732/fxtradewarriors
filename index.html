@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>FX Trade Warriors - Trading Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <section id="landingView" class="page-view landing-view" aria-labelledby="landingTitle">
+      <nav class="top-nav" aria-label="Primary">
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true">FX</span>
+          <span>FX Trade Warriors</span>
+        </div>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode"
+          aria-pressed="false">
+          <span class="theme-toggle-track" aria-hidden="true">
+            <span class="theme-toggle-icon"></span>
+          </span>
+          <span class="theme-toggle-text">Dark</span>
+        </button>
+      </nav>
+
+      <main class="landing-hero" data-reveal>
+        <section class="landing-copy">
+          <p class="eyebrow">Precision trading cockpit</p>
+          <h1 id="landingTitle">Master risk. Build consistency.</h1>
+          <p class="landing-description">
+            FX Trade Warriors brings lot sizing, prop-firm drawdown checks, and a structured trading journal into one
+            fast dashboard built for disciplined execution.
+          </p>
+
+          <div class="landing-highlights" aria-label="Product highlights">
+            <span>Live risk metrics</span>
+            <span>Prop-firm guardrails</span>
+            <span>Trade journal analytics</span>
+          </div>
+        </section>
+
+        <section class="landing-terminal" aria-label="Trading dashboard preview">
+          <div class="terminal-toolbar">
+            <span>EURUSD</span>
+            <span class="positive">+0.42%</span>
+          </div>
+          <div class="hero-chart-animation hero-chart-large" aria-hidden="true">
+            <svg class="hero-price-line" viewBox="0 0 420 170" preserveAspectRatio="none">
+              <polyline class="price-line-shadow"
+                points="4,126 38,112 70,118 103,84 136,96 170,72 203,78 238,52 274,66 313,38 355,48 416,24"></polyline>
+              <polyline class="price-line-main"
+                points="4,126 38,112 70,118 103,84 136,96 170,72 203,78 238,52 274,66 313,38 355,48 416,24"></polyline>
+            </svg>
+            <div class="hero-candles">
+              <span class="hero-candle up"></span>
+              <span class="hero-candle down"></span>
+              <span class="hero-candle up"></span>
+              <span class="hero-candle up"></span>
+              <span class="hero-candle down"></span>
+              <span class="hero-candle up"></span>
+              <span class="hero-candle down"></span>
+              <span class="hero-candle up"></span>
+              <span class="hero-candle up"></span>
+              <span class="hero-candle down"></span>
+              <span class="hero-candle up"></span>
+              <span class="hero-candle down"></span>
+              <span class="hero-candle up"></span>
+              <span class="hero-candle up"></span>
+            </div>
+          </div>
+          <div class="floating-trade-card card-profit">
+            <span>Potential Profit</span>
+            <strong>$1,250.00</strong>
+          </div>
+          <div class="floating-trade-card card-risk">
+            <span>Risk Usage</span>
+            <strong>18.6%</strong>
+          </div>
+          <div class="price-marker marker-buy">Buy zone</div>
+          <div class="price-marker marker-target">Target 1:2.5</div>
+        </section>
+      </main>
+
+      <section class="landing-feature-grid" aria-label="Dashboard capabilities">
+        <article class="panel landing-feature" data-reveal>
+          <span class="feature-icon" aria-hidden="true">LS</span>
+          <h2>Lot Size Calculator</h2>
+          <p>Convert risk into clean position sizing for EURUSD and XAUUSD with instant distance and reward metrics.</p>
+        </article>
+        <article class="panel landing-feature" data-reveal>
+          <span class="feature-icon" aria-hidden="true">PF</span>
+          <h2>Prop-Firm Monitor</h2>
+          <p>Check daily and maximum drawdown usage before placing trades, with warnings when risk gets too hot.</p>
+        </article>
+        <article class="panel landing-feature" data-reveal>
+          <span class="feature-icon" aria-hidden="true">TJ</span>
+          <h2>Trading Journal</h2>
+          <p>Track accounts, PnL, outcomes, lessons, mistakes, and performance statistics per trader profile.</p>
+        </article>
+      </section>
+
+      <section class="landing-showcase-grid" aria-label="Platform showcase">
+        <article class="panel showcase-panel showcase-journal" data-reveal>
+          <div>
+            <p class="section-kicker">Trading Journal Showcase</p>
+            <h2>Turn every trade into a reviewable decision.</h2>
+            <p>Capture entry logic, exit logic, mistakes, lessons, account selection, final PnL, and balance movement in
+              one structured workflow.</p>
+          </div>
+          <div class="showcase-stack" aria-hidden="true">
+            <span><strong>London breakout</strong><small>TP Hit · +$420.00</small></span>
+            <span><strong>Gold pullback</strong><small>Manual exit · +$118.50</small></span>
+            <span><strong>NY reversal</strong><small>SL Hit · -$95.00</small></span>
+          </div>
+        </article>
+
+        <article class="panel showcase-panel showcase-risk" data-reveal>
+          <div>
+            <p class="section-kicker">Risk Management Showcase</p>
+            <h2>Know the damage before the order goes live.</h2>
+            <p>Compare trade risk against account balance, daily loss, and total drawdown so prop-firm rules stay
+              visible
+              at the exact moment they matter.</p>
+          </div>
+          <div class="risk-rings" aria-hidden="true">
+            <span style="--ring-value: 62%"><strong>62%</strong><small>Daily room</small></span>
+            <span style="--ring-value: 28%"><strong>28%</strong><small>Risk usage</small></span>
+          </div>
+        </article>
+
+        <article class="panel showcase-panel showcase-stats" data-reveal>
+          <div>
+            <p class="section-kicker">Statistics Showcase</p>
+            <h2>Read performance at a glance.</h2>
+            <p>Win rate, total trades, net PnL, best trade, worst trade, and average RR sit together in a clean trader
+              dashboard.</p>
+          </div>
+          <dl class="showcase-stats-list" aria-hidden="true">
+            <div>
+              <dt>Win Rate</dt>
+              <dd>64%</dd>
+            </div>
+            <div>
+              <dt>Net PnL</dt>
+              <dd class="positive">+$2,840</dd>
+            </div>
+            <div>
+              <dt>Avg RR</dt>
+              <dd>1:2.15</dd>
+            </div>
+          </dl>
+        </article>
+      </section>
+
+      <div class="landing-cta" data-reveal>
+        <p>Ready when your next setup is.</p>
+        <button class="button primary cta-button" type="button" data-view="auth">Login To Dashboard</button>
+      </div>
+
+      <footer class="site-footer">
+        <p>&copy; Krishna Upadhyay, Do not claim this as your own</p>
+      </footer>
+    </section>
+
+    <section id="authView" class="page-view auth-view is-hidden" aria-labelledby="authTitle">
+      <div class="auth-frame">
+        <div class="auth-visual" aria-hidden="true">
+          <div class="auth-orbit"></div>
+          <div class="auth-signal-card">
+            <span>Secure session</span>
+            <strong>Encrypted local workspace</strong>
+          </div>
+          <div class="auth-signal-card signal-secondary">
+            <span>Risk engine</span>
+            <strong>Ready</strong>
+          </div>
+        </div>
+
+        <form id="loginForm" class="pin-card auth-card">
+          <div class="auth-card-top">
+            <div>
+              <p class="section-kicker">Secure Access</p>
+              <h1 id="authTitle">FX Trade Warriors</h1>
+            </div>
+            <button class="theme-toggle compact-theme-toggle" type="button" data-theme-toggle
+              aria-label="Switch to light mode" aria-pressed="false">
+              <span class="theme-toggle-track" aria-hidden="true">
+                <span class="theme-toggle-icon"></span>
+              </span>
+              <span class="theme-toggle-text">Dark</span>
+            </button>
+          </div>
+          <p class="auth-subtitle">Sign in to your trading dashboard.</p>
+
+          <label class="field">
+            <span>Username</span>
+            <input id="loginUsername" name="username" type="text" autocomplete="username" required>
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+          </label>
+
+          <button class="button primary" type="submit">Login</button>
+          <button class="button secondary" type="button" data-view="landing">Back To Overview</button>
+          <p id="loginError" class="pin-error" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="homeView" class="page-view is-hidden" aria-labelledby="homeTitle">
+      <header class="app-header home-header">
+        <div class="hero-chart-animation" aria-hidden="true">
+          <svg class="hero-price-line" viewBox="0 0 420 170" preserveAspectRatio="none">
+            <polyline class="price-line-shadow"
+              points="4,126 38,112 70,118 103,84 136,96 170,72 203,78 238,52 274,66 313,38 355,48 416,24"></polyline>
+            <polyline class="price-line-main"
+              points="4,126 38,112 70,118 103,84 136,96 170,72 203,78 238,52 274,66 313,38 355,48 416,24"></polyline>
+          </svg>
+          <div class="hero-candles">
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+          </div>
+        </div>
+        <div class="header-content">
+          <p class="eyebrow">FX Trade Warriors</p>
+          <h1 id="homeTitle">Welcome, <span id="homeDisplayName">Trader</span></h1>
+          <p class="header-subtitle">Choose your calculator or journal workspace.</p>
+        </div>
+        <div class="header-tools">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode"
+            aria-pressed="false">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-icon"></span>
+            </span>
+            <span class="theme-toggle-text">Dark</span>
+          </button>
+          <button class="button danger" type="button" data-logout>Logout</button>
+        </div>
+      </header>
+
+      <main class="home-grid">
+        <button class="panel feature-card" type="button" data-view="calculator">
+          <span class="feature-icon" aria-hidden="true">LS</span>
+          <span class="section-kicker">Calculator</span>
+          <strong>Lot Size Calculator</strong>
+          <small>Position sizing, prop-firm drawdown checks, and saved calculations.</small>
+        </button>
+
+        <button class="panel feature-card" type="button" data-view="journal">
+          <span class="feature-icon" aria-hidden="true">TJ</span>
+          <span class="section-kicker">Journal</span>
+          <strong>Trading Journal</strong>
+          <small>Accounts, trade outcomes, balance updates, notes, and statistics.</small>
+        </button>
+      </main>
+
+      <footer class="site-footer">
+        <p>&copy; Krishna Upadhyay, Do not claim this as your own</p>
+      </footer>
+    </section>
+
+    <section id="calculatorView" class="page-view is-hidden" aria-labelledby="calculatorPageTitle">
+      <header class="app-header">
+        <div class="hero-chart-animation" aria-hidden="true">
+          <svg class="hero-price-line" viewBox="0 0 420 170" preserveAspectRatio="none">
+            <polyline class="price-line-shadow"
+              points="4,126 38,112 70,118 103,84 136,96 170,72 203,78 238,52 274,66 313,38 355,48 416,24"></polyline>
+            <polyline class="price-line-main"
+              points="4,126 38,112 70,118 103,84 136,96 170,72 203,78 238,52 274,66 313,38 355,48 416,24"></polyline>
+          </svg>
+          <div class="hero-candles">
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+          </div>
+        </div>
+        <div class="header-content">
+          <p class="eyebrow">FX Trade Warriors</p>
+          <h1 id="calculatorPageTitle">Lot Size Calculator</h1>
+          <p class="header-subtitle">EURUSD and XAUUSD position sizing with drawdown control.</p>
+        </div>
+        <div class="header-tools">
+          <button class="button secondary" type="button" data-view="home">Home</button>
+          <button class="button danger" type="button" data-logout>Logout</button>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode"
+            aria-pressed="false">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-icon"></span>
+            </span>
+            <span class="theme-toggle-text">Dark</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-layout">
+        <section class="panel calculator-panel" aria-labelledby="calculatorTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Calculator</p>
+              <h2 id="calculatorTitle">Position Setup</h2>
+            </div>
+            <span id="directionBadge" class="badge">Waiting</span>
+          </div>
+
+          <form id="calculatorForm" novalidate>
+            <div class="form-grid">
+              <label class="field">
+                <span>Account Balance</span>
+                <input id="accountBalance" name="accountBalance" type="number" min="0" step="0.01" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Risk Type</span>
+                <select id="riskType" name="riskType" required></select>
+              </label>
+
+              <label class="field">
+                <span id="riskValueLabel">Risk Value</span>
+                <div class="input-with-suffix">
+                  <input id="riskValue" name="riskValue" type="number" min="0" step="0.01" inputmode="decimal"
+                    autocomplete="off" required>
+                  <span id="riskValueSuffix">%</span>
+                </div>
+              </label>
+
+              <label class="field">
+                <span>Instrument</span>
+                <select id="instrument" name="instrument" required></select>
+              </label>
+
+              <label class="field">
+                <span>Entry Price</span>
+                <input id="entryPrice" name="entryPrice" type="number" min="0" inputmode="decimal" autocomplete="off"
+                  required>
+              </label>
+
+              <label class="field">
+                <span>Stop Loss</span>
+                <input id="stopLoss" name="stopLoss" type="number" min="0" inputmode="decimal" autocomplete="off"
+                  required>
+              </label>
+
+              <label class="field">
+                <span>Take Profit</span>
+                <input id="takeProfit" name="takeProfit" type="number" min="0" inputmode="decimal" autocomplete="off"
+                  required>
+              </label>
+            </div>
+          </form>
+
+          <div id="errorPanel" class="alert-panel error-panel is-hidden" role="alert" aria-live="polite">
+            <strong>Check these fields</strong>
+            <ul id="errorList"></ul>
+          </div>
+        </section>
+
+        <aside class="results-column">
+          <section class="panel results-panel" aria-labelledby="resultsTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker">Results</p>
+                <h2 id="resultsTitle">Trade Metrics</h2>
+              </div>
+            </div>
+
+            <div class="lot-result">
+              <span>Recommended Lot Size</span>
+              <strong id="lotSize">--</strong>
+              <small id="lotNote">standard lots</small>
+            </div>
+
+            <dl class="metric-list">
+              <div>
+                <dt>Risk Amount</dt>
+                <dd id="riskAmount">--</dd>
+              </div>
+              <div>
+                <dt>Potential Profit</dt>
+                <dd id="potentialProfit" class="positive">--</dd>
+              </div>
+              <div>
+                <dt>Potential Loss</dt>
+                <dd id="potentialLoss" class="negative">--</dd>
+              </div>
+              <div>
+                <dt>Risk Reward Ratio</dt>
+                <dd id="riskReward">--</dd>
+              </div>
+              <div>
+                <dt>Pip / Point Value</dt>
+                <dd id="pipValue">--</dd>
+              </div>
+            </dl>
+
+            <div id="calcWarningPanel" class="alert-panel note-panel is-hidden" aria-live="polite">
+              <strong>Calculation notes</strong>
+              <ul id="calcWarningList"></ul>
+            </div>
+          </section>
+        </aside>
+
+        <section class="panel results-panel full-span" aria-labelledby="pointsTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Points</p>
+              <h2 id="pointsTitle">Distance Metrics</h2>
+            </div>
+          </div>
+
+          <dl class="metric-list">
+            <div>
+              <dt>Stop Loss Distance</dt>
+              <dd id="stopDistance">--</dd>
+            </div>
+
+            <div>
+              <dt>Take Profit Distance</dt>
+              <dd id="profitDistance">--</dd>
+            </div>
+
+            <div>
+              <dt>Risk Per Lot</dt>
+              <dd id="riskPerLot">--</dd>
+            </div>
+
+            <div>
+              <dt>Reward Per Lot</dt>
+              <dd id="rewardPerLot">--</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel summary-panel full-span" aria-labelledby="summaryTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Summary</p>
+              <h2 id="summaryTitle">Trade Card</h2>
+            </div>
+          </div>
+
+          <div class="summary-visuals" aria-hidden="true">
+            <div class="summary-trade-map">
+              <svg class="summary-path-svg" viewBox="0 0 420 164" preserveAspectRatio="none">
+                <polyline class="summary-path-loss" points="32,118 170,82"></polyline>
+                <polyline class="summary-path-profit" points="170,82 388,34"></polyline>
+              </svg>
+              <div class="summary-marker marker-stop">
+                <span>SL</span>
+              </div>
+              <div class="summary-marker marker-entry">
+                <span>Entry</span>
+              </div>
+              <div class="summary-marker marker-target">
+                <span>TP</span>
+              </div>
+            </div>
+
+            <div class="summary-flow">
+              <div class="summary-flow-row flow-profit">
+                <div>
+                  <span>Profit</span>
+                  <strong id="summaryVisualProfit">--</strong>
+                </div>
+                <span class="summary-flow-track">
+                  <span id="summaryProfitBar" class="summary-flow-fill"></span>
+                </span>
+              </div>
+              <div class="summary-flow-row flow-loss">
+                <div>
+                  <span>Loss</span>
+                  <strong id="summaryVisualLoss">--</strong>
+                </div>
+                <span class="summary-flow-track">
+                  <span id="summaryLossBar" class="summary-flow-fill"></span>
+                </span>
+              </div>
+              <div class="summary-flow-row flow-ratio">
+                <div>
+                  <span>Risk Reward</span>
+                  <strong id="summaryVisualRiskReward">--</strong>
+                </div>
+                <span class="summary-flow-track">
+                  <span id="summaryRiskRewardBar" class="summary-flow-fill"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <dl class="summary-list">
+            <div>
+              <dt>Instrument</dt>
+              <dd id="summaryInstrument">--</dd>
+            </div>
+            <div>
+              <dt>Account Balance</dt>
+              <dd id="summaryBalance">--</dd>
+            </div>
+            <div>
+              <dt>Risk Amount</dt>
+              <dd id="summaryRisk">--</dd>
+            </div>
+            <div>
+              <dt>Stop Loss</dt>
+              <dd id="summaryStopLoss">--</dd>
+            </div>
+            <div>
+              <dt>Take Profit</dt>
+              <dd id="summaryTakeProfit">--</dd>
+            </div>
+            <div>
+              <dt>Lot Size</dt>
+              <dd id="summaryLotSize">--</dd>
+            </div>
+            <div>
+              <dt>Potential Profit</dt>
+              <dd id="summaryProfit">--</dd>
+            </div>
+            <div>
+              <dt>Potential Loss</dt>
+              <dd id="summaryLoss">--</dd>
+            </div>
+            <div>
+              <dt>Risk Reward</dt>
+              <dd id="summaryRiskReward">--</dd>
+            </div>
+          </dl>
+
+          <div class="button-row summary-actions">
+            <button id="copySummary" class="button secondary" type="button" disabled>Copy Summary</button>
+            <div class="admin-save-control">
+              <button id="saveCalculation" class="button primary" type="button" disabled>Save Calculation</button>
+              <span class="admin-note">Only for admins</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel prop-panel full-span" aria-labelledby="propTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Prop Firm Mode</p>
+              <h2 id="propTitle">Drawdown Monitor</h2>
+            </div>
+          </div>
+
+          <div class="prop-layout">
+            <div class="prop-controls">
+              <div class="form-grid compact">
+                <label class="field">
+                  <span>Preset</span>
+                  <select id="propPreset" name="propPreset"></select>
+                </label>
+
+                <label class="field">
+                  <span>Current Daily Loss</span>
+                  <input id="currentDailyLoss" name="currentDailyLoss" type="number" min="0" step="0.01"
+                    inputmode="decimal" autocomplete="off">
+                </label>
+
+                <label class="field">
+                  <span>Current Overall Drawdown</span>
+                  <input id="currentOverallDrawdown" name="currentOverallDrawdown" type="number" min="0" step="0.01"
+                    inputmode="decimal" autocomplete="off">
+                </label>
+              </div>
+
+              <div id="customLimits" class="form-grid compact custom-limits is-hidden">
+                <label class="field">
+                  <span>Daily Drawdown %</span>
+                  <input id="customDailyPercent" name="customDailyPercent" type="number" min="0" step="0.1"
+                    inputmode="decimal" autocomplete="off">
+                </label>
+
+                <label class="field">
+                  <span>Maximum Drawdown %</span>
+                  <input id="customMaxPercent" name="customMaxPercent" type="number" min="0" step="0.1"
+                    inputmode="decimal" autocomplete="off">
+                </label>
+              </div>
+            </div>
+
+            <div class="drawdown-board">
+              <dl class="drawdown-values">
+                <div>
+                  <dt>Daily Drawdown Limit</dt>
+                  <dd id="dailyLimit">--</dd>
+                </div>
+                <div>
+                  <dt>Maximum Drawdown Limit</dt>
+                  <dd id="maxLimit">--</dd>
+                </div>
+                <div>
+                  <dt>Remaining Daily Drawdown</dt>
+                  <dd id="dailyRemaining">--</dd>
+                </div>
+                <div>
+                  <dt>Remaining Overall Drawdown</dt>
+                  <dd id="maxRemaining">--</dd>
+                </div>
+                <div>
+                  <dt>Current Risk Usage</dt>
+                  <dd id="riskUsage">--</dd>
+                </div>
+              </dl>
+
+              <div class="progress-stack">
+                <label>
+                  <span>Daily Usage</span>
+                  <progress id="dailyProgress" max="100" value="0"></progress>
+                </label>
+                <label>
+                  <span>Overall Usage</span>
+                  <progress id="maxProgress" max="100" value="0"></progress>
+                </label>
+                <label>
+                  <span>Trade Risk Usage</span>
+                  <progress id="riskUsageProgress" max="100" value="0"></progress>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="propWarningPanel" class="alert-panel warning-panel is-hidden" role="alert" aria-live="polite">
+            <strong>Warnings</strong>
+            <ul id="propWarningList"></ul>
+          </div>
+        </section>
+
+        <section class="panel history-panel full-span" aria-labelledby="historyTitle">
+          <div class="panel-heading history-heading">
+            <div>
+              <p class="section-kicker">History</p>
+              <h2 id="historyTitle">Saved Calculations</h2>
+            </div>
+            <div class="button-row">
+              <button id="toggleHistory" class="button secondary" type="button">View History</button>
+              <button id="clearHistory" class="button danger" type="button" disabled>Clear All History</button>
+            </div>
+          </div>
+
+          <div id="historyPanelBody" class="history-body is-collapsed">
+            <p id="historyEmpty" class="empty-state">No saved calculations yet.</p>
+            <div id="historyList" class="history-list" aria-live="polite"></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>&copy; Krishna Upadhyay, Do not claim this as your own</p>
+      </footer>
+    </section>
+
+    <section id="journalView" class="page-view is-hidden" aria-labelledby="journalTitle">
+      <header class="app-header page-header">
+        <div class="header-content">
+          <p class="eyebrow">FX Trade Warriors</p>
+          <h1 id="journalTitle">Trading Journal</h1>
+          <p class="header-subtitle">Track accounts, outcomes, notes, and performance per user.</p>
+        </div>
+        <div class="header-tools">
+          <button class="button secondary" type="button" data-view="home">Home</button>
+          <button class="button danger" type="button" data-logout>Logout</button>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode"
+            aria-pressed="false">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-icon"></span>
+            </span>
+            <span class="theme-toggle-text">Dark</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="journal-layout">
+        <section class="panel account-panel" aria-labelledby="accountsTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Accounts</p>
+              <h2 id="accountsTitle">Trading Accounts</h2>
+            </div>
+          </div>
+
+          <form id="accountForm" class="form-grid account-form" novalidate>
+            <label class="field">
+              <span>Account Name</span>
+              <input id="accountName" name="accountName" type="text" autocomplete="off" required>
+            </label>
+
+            <label class="field">
+              <span>Current Account Balance</span>
+              <input id="accountStartingBalance" name="accountStartingBalance" type="number" min="0" step="0.01"
+                inputmode="decimal" autocomplete="off" required>
+            </label>
+
+            <button class="button primary" type="submit">Create Account</button>
+          </form>
+
+          <div id="accountErrorPanel" class="alert-panel error-panel is-hidden" role="alert" aria-live="polite">
+            <strong>Account error</strong>
+            <ul id="accountErrorList"></ul>
+          </div>
+
+          <div id="accountsList" class="accounts-list" aria-live="polite"></div>
+        </section>
+
+        <section class="panel statistics-panel" aria-labelledby="statsTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Statistics</p>
+              <h2 id="statsTitle">Performance</h2>
+            </div>
+          </div>
+
+          <dl class="stats-grid">
+            <div>
+              <dt>Total Trades</dt>
+              <dd id="statTotalTrades">0</dd>
+            </div>
+            <div>
+              <dt>Winning Trades</dt>
+              <dd id="statWinningTrades">0</dd>
+            </div>
+            <div>
+              <dt>Losing Trades</dt>
+              <dd id="statLosingTrades">0</dd>
+            </div>
+            <div>
+              <dt>Win Rate</dt>
+              <dd id="statWinRate">--</dd>
+            </div>
+            <div>
+              <dt>Total Profit</dt>
+              <dd id="statTotalProfit" class="positive">--</dd>
+            </div>
+            <div>
+              <dt>Total Loss</dt>
+              <dd id="statTotalLoss" class="negative">--</dd>
+            </div>
+            <div>
+              <dt>Net PnL</dt>
+              <dd id="statNetPnl">--</dd>
+            </div>
+            <div>
+              <dt>Average RR</dt>
+              <dd id="statAverageRr">--</dd>
+            </div>
+            <div>
+              <dt>Best Trade</dt>
+              <dd id="statBestTrade">--</dd>
+            </div>
+            <div>
+              <dt>Worst Trade</dt>
+              <dd id="statWorstTrade">--</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel journal-entry-panel full-span" aria-labelledby="newJournalTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">New Entry</p>
+              <h2 id="newJournalTitle">Trade Details</h2>
+            </div>
+          </div>
+
+          <p id="journalAccountEmpty" class="empty-state is-hidden">Create a trading account before adding journal
+            entries.</p>
+
+          <form id="journalForm" novalidate>
+            <div class="form-grid journal-form-grid">
+              <label class="field">
+                <span>Account Selection</span>
+                <select id="journalAccount" name="journalAccount" required></select>
+              </label>
+
+              <label class="field">
+                <span>Market</span>
+                <select id="journalMarket" name="journalMarket" required></select>
+              </label>
+
+              <label class="field">
+                <span>Entry Price</span>
+                <input id="journalEntryPrice" name="journalEntryPrice" type="number" min="0" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Stop Loss</span>
+                <input id="journalStopLoss" name="journalStopLoss" type="number" min="0" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Take Profit</span>
+                <input id="journalTakeProfit" name="journalTakeProfit" type="number" min="0" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Lot Size</span>
+                <input id="journalLotSize" name="journalLotSize" type="number" min="0" step="0.01" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Time Of Entry</span>
+                <input id="journalEntryTime" name="journalEntryTime" type="datetime-local" required>
+              </label>
+
+              <label class="field">
+                <span>Trade Outcome</span>
+                <select id="journalOutcome" name="journalOutcome" required>
+                  <option value="tp">TP Hit</option>
+                  <option value="sl">SL Hit</option>
+                  <option value="manual">Exited Before TP/SL</option>
+                </select>
+              </label>
+
+              <label id="journalExitPriceField" class="field is-hidden">
+                <span>Exit Price</span>
+                <input id="journalExitPrice" name="journalExitPrice" type="number" min="0" inputmode="decimal"
+                  autocomplete="off">
+              </label>
+            </div>
+
+            <div class="journal-preview">
+              <dl class="metric-list">
+                <div>
+                  <dt>Potential Profit at TP</dt>
+                  <dd id="journalPotentialProfit" class="positive">--</dd>
+                </div>
+                <div>
+                  <dt>Potential Loss at SL</dt>
+                  <dd id="journalPotentialLoss" class="negative">--</dd>
+                </div>
+                <div>
+                  <dt>Risk Reward Ratio</dt>
+                  <dd id="journalRiskReward">--</dd>
+                </div>
+                <div>
+                  <dt>Final Trade PnL</dt>
+                  <dd id="journalFinalPnl">--</dd>
+                </div>
+                <div>
+                  <dt>Balance After Trade</dt>
+                  <dd id="journalBalanceAfter">--</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="form-grid notes-grid">
+              <label class="field">
+                <span>Entry Logic</span>
+                <textarea id="journalEntryLogic" name="journalEntryLogic"></textarea>
+              </label>
+
+              <label class="field">
+                <span>Exit Logic</span>
+                <textarea id="journalExitLogic" name="journalExitLogic"></textarea>
+              </label>
+
+              <label class="field">
+                <span>Mistakes</span>
+                <textarea id="journalMistakes" name="journalMistakes"></textarea>
+              </label>
+
+              <label class="field">
+                <span>Lessons Learned</span>
+                <textarea id="journalLessonsLearned" name="journalLessonsLearned"></textarea>
+              </label>
+
+              <label class="field full-field">
+                <span>Additional Notes</span>
+                <textarea id="journalNotes" name="journalNotes"></textarea>
+              </label>
+            </div>
+
+            <div id="journalErrorPanel" class="alert-panel error-panel is-hidden" role="alert" aria-live="polite">
+              <strong>Journal error</strong>
+              <ul id="journalErrorList"></ul>
+            </div>
+
+            <button id="saveJournalEntry" class="button primary" type="submit">Save Journal Entry</button>
+          </form>
+        </section>
+
+        <section class="panel journal-dashboard full-span" aria-labelledby="journalDashboardTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Dashboard</p>
+              <h2 id="journalDashboardTitle">Saved Trades</h2>
+            </div>
+          </div>
+
+          <p id="journalEmpty" class="empty-state">No journal entries yet.</p>
+          <div id="journalList" class="journal-list" aria-live="polite"></div>
+        </section>
+
+        <section id="journalDetailPanel" class="panel journal-detail-panel full-span is-hidden"
+          aria-labelledby="journalDetailTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Trade Review</p>
+              <h2 id="journalDetailTitle">Journal Entry</h2>
+            </div>
+            <button id="closeJournalDetail" class="button secondary" type="button">Close</button>
+          </div>
+          <div id="journalDetailContent" class="journal-detail-content"></div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>&copy; Krishna Upadhyay, Do not claim this as your own</p>
+      </footer>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
