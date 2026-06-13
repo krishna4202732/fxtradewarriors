@@ -34,6 +34,7 @@ import {
 import {
   addJournalEntry,
   createAccount,
+  deleteAccount,
   deleteJournalEntry,
   loadAccounts,
   loadJournalEntries,
@@ -47,6 +48,22 @@ const OUTCOME_LABELS = {
   tp: "TP Hit",
   sl: "SL Hit",
   manual: "Exited Before TP/SL",
+};
+
+const ACCOUNT_TYPE_LABELS = {
+  live: "Live Account",
+  prop: "Prop Firm Account",
+};
+
+const PHASE_LABELS = {
+  phase1: "Phase 1",
+  phase2: "Phase 2",
+};
+
+const ACCOUNT_STATUS_LABELS = {
+  ACTIVE: "🟡 ACTIVE",
+  PASSED: "✅ PASSED",
+  FAILED: "❌ FAILED",
 };
 
 const elements = {
@@ -130,7 +147,11 @@ const elements = {
   historyList: document.querySelector("#historyList"),
   accountForm: document.querySelector("#accountForm"),
   accountName: document.querySelector("#accountName"),
-  accountStartingBalance: document.querySelector("#accountStartingBalance"),
+  accountType: document.querySelector("#accountType"),
+  accountPhaseField: document.querySelector("#accountPhaseField"),
+  accountPhase: document.querySelector("#accountPhase"),
+  accountInitialBalance: document.querySelector("#accountInitialBalance"),
+  accountCurrentBalance: document.querySelector("#accountCurrentBalance"),
   accountErrorPanel: document.querySelector("#accountErrorPanel"),
   accountErrorList: document.querySelector("#accountErrorList"),
   accountsList: document.querySelector("#accountsList"),
@@ -174,6 +195,9 @@ const elements = {
   journalDetailPanel: document.querySelector("#journalDetailPanel"),
   journalDetailContent: document.querySelector("#journalDetailContent"),
   closeJournalDetail: document.querySelector("#closeJournalDetail"),
+  accountDeleteDialog: document.querySelector("#accountDeleteDialog"),
+  cancelDeleteAccount: document.querySelector("#cancelDeleteAccount"),
+  confirmDeleteAccount: document.querySelector("#confirmDeleteAccount"),
   toast: document.querySelector("#toast"),
 };
 
@@ -182,6 +206,8 @@ let currentCalculation = null;
 let currentJournalPreview = null;
 let historyVisible = false;
 let toastTimer = null;
+let pendingDeleteAccountId = "";
+const expandedPropDashboards = new Set();
 
 function getActiveUserId() {
   return activeUser ? activeUser.username : "";
@@ -267,6 +293,7 @@ function handleLoginSubmit(event) {
   }
 
   activeUser = user;
+  recalculateUserJournal(getActiveUserId());
   elements.loginError.textContent = "";
   elements.loginForm.reset();
   showView("home");
@@ -881,6 +908,130 @@ function getJournalAccounts() {
   return loadAccounts(getActiveUserId());
 }
 
+function getTargetProgressState(progress) {
+  if (progress >= 100) {
+    return "complete";
+  }
+
+  if (progress >= 50) {
+    return "success";
+  }
+
+  return "neutral";
+}
+
+function getDrawdownProgressState(progress) {
+  if (progress >= 100) {
+    return "critical";
+  }
+
+  if (progress >= 80) {
+    return "danger";
+  }
+
+  if (progress >= 50) {
+    return "warning";
+  }
+
+  return "safe";
+}
+
+function renderAccountProgressPanel({ title, state, percent, values, action = "" }) {
+  const clampedPercent = clampPercent(percent);
+
+  return `
+    <section class="account-progress" data-progress-state="${state}">
+      <div class="account-progress-heading">
+        <strong>${escapeHtml(title)}</strong>
+        <div class="account-progress-heading-actions">
+          <span>${formatPercent(percent)}</span>
+          ${action}
+        </div>
+      </div>
+      <span class="account-progress-track">
+        <span class="account-progress-fill" style="--account-progress: ${clampedPercent}%"></span>
+      </span>
+      <dl class="account-progress-values">
+        ${values
+          .map(
+            ([label, value]) => `
+              <div>
+                <dt>${escapeHtml(label)}</dt>
+                <dd>${escapeHtml(value)}</dd>
+              </div>
+            `,
+          )
+          .join("")}
+      </dl>
+    </section>
+  `;
+}
+
+function renderPropFirmDashboard(account) {
+  if (account.accountType !== "prop" || !account.propFirm) {
+    return "";
+  }
+
+  const metrics = account.propFirm;
+  const safeId = escapeHtml(account.id);
+  const isExpanded = expandedPropDashboards.has(account.id);
+  const drawdownId = `propDrawdown-${safeId}`;
+  const toggleLabel = isExpanded ? "Hide Drawdown" : "Show Drawdown";
+  const toggleButton = `
+    <button class="button secondary prop-dashboard-toggle" type="button" data-account-action="toggle-prop-dashboard" data-id="${safeId}" aria-expanded="${String(isExpanded)}" aria-controls="${drawdownId}">
+      ${toggleLabel}
+    </button>
+  `;
+
+  return `
+    <div class="prop-dashboard" aria-label="Prop firm progress dashboard">
+      ${renderAccountProgressPanel({
+        title: "Profit Target Progress",
+        state: getTargetProgressState(metrics.targetProgressPercent),
+        percent: metrics.targetProgressPercent,
+        action: toggleButton,
+        values: [
+          ["Current", formatCurrency(account.currentBalance)],
+          ["Target", formatCurrency(account.targetBalance)],
+          ["Target %", formatPercent(account.targetPercent)],
+          ["Remaining", formatCurrency(metrics.remainingTarget)],
+        ],
+      })}
+      <div id="${drawdownId}" class="prop-drawdown-panels${isExpanded ? "" : " is-hidden"}">
+        ${renderAccountProgressPanel({
+          title: "Maximum Daily Drawdown",
+          state: getDrawdownProgressState(metrics.dailyUsagePercent),
+          percent: metrics.dailyUsagePercent,
+          values: [
+            ["Limit", formatCurrency(metrics.dailyDrawdownLimit)],
+            ["Used", formatCurrency(metrics.dailyDrawdownUsed)],
+            ["Remaining", formatCurrency(metrics.dailyDrawdownRemaining)],
+            ["Minimum Balance", formatCurrency(metrics.dailyMinimumBalance)],
+          ],
+        })}
+        ${renderAccountProgressPanel({
+          title: "Maximum Overall Drawdown",
+          state: getDrawdownProgressState(metrics.overallUsagePercent),
+          percent: metrics.overallUsagePercent,
+          values: [
+            ["Limit", formatCurrency(metrics.overallDrawdownLimit)],
+            ["Used", formatCurrency(metrics.overallDrawdownUsed)],
+            ["Remaining", formatCurrency(metrics.overallDrawdownRemaining)],
+            ["Minimum Balance", formatCurrency(metrics.minimumAllowedBalance)],
+          ],
+        })}
+      </div>
+    </div>
+  `;
+}
+
+function updateAccountPhaseVisibility() {
+  const isPropAccount = elements.accountType.value === "prop";
+
+  elements.accountPhaseField.classList.toggle("is-hidden", !isPropAccount);
+  elements.accountPhase.disabled = !isPropAccount;
+}
+
 function getSelectedJournalAccount() {
   const accountId = elements.journalAccount.value;
   return getJournalAccounts().find((account) => account.id === accountId) || null;
@@ -1129,18 +1280,59 @@ function renderAccounts(accounts) {
 
   elements.accountsList.innerHTML = accounts
     .map(
-      (account) => `
-        <article class="account-card">
-          <div>
-            <strong>${escapeHtml(account.name)}</strong>
-            <span>Started ${formatCurrency(account.startingBalance)}</span>
-          </div>
-          <div>
-            <span>Live Balance</span>
-            <strong>${formatCurrency(account.currentBalance)}</strong>
-          </div>
-        </article>
-      `,
+      (account) => {
+        const safeId = escapeHtml(account.id);
+        const targetReached = account.accountStatus === "PASSED";
+        const accountStatus =
+          account.accountType === "prop"
+            ? account.accountStatus || "ACTIVE"
+            : "";
+        const phaseMarkup =
+          account.accountType === "prop"
+            ? `<span>${escapeHtml(PHASE_LABELS[account.phase] || "Phase 1")} · Target ${formatPercent(account.targetPercent)}</span>`
+            : "";
+        const statusMarkup =
+          account.accountType === "prop"
+            ? `<span class="account-status-badge" data-status="${escapeHtml(accountStatus)}">${escapeHtml(ACCOUNT_STATUS_LABELS[accountStatus] || ACCOUNT_STATUS_LABELS.ACTIVE)}</span>`
+            : "";
+        const propDashboard = renderPropFirmDashboard(account);
+
+        return `
+          <article class="account-card" data-account-id="${safeId}">
+            <div class="account-card-main">
+              <div>
+                <div class="account-title-row">
+                  <strong>${escapeHtml(account.name)}</strong>
+                  ${targetReached ? '<span class="target-badge">Target Reached</span>' : ""}
+                  ${statusMarkup}
+                </div>
+                <span>${escapeHtml(ACCOUNT_TYPE_LABELS[account.accountType] || "Live Account")}</span>
+                ${phaseMarkup}
+              </div>
+              <div class="account-balance-grid">
+                <div>
+                  <span>Initial Balance</span>
+                  <strong>${formatCurrency(account.initialBalance)}</strong>
+                </div>
+                <div>
+                  <span>Current Balance</span>
+                  <strong>${formatCurrency(account.currentBalance)}</strong>
+                </div>
+                ${
+                  account.accountType === "prop"
+                    ? `<div>
+                        <span>Target Balance</span>
+                        <strong>${formatCurrency(account.targetBalance)}</strong>
+                      </div>`
+                    : ""
+                }
+              </div>
+              ${propDashboard}
+            </div>
+            <button class="button danger account-delete-button" type="button" data-account-action="delete" data-id="${safeId}" aria-label="Delete ${escapeHtml(account.name)}">Delete</button>
+          </article>
+        `;
+      },
     )
     .join("");
 }
@@ -1273,14 +1465,29 @@ function handleAccountSubmit(event) {
   event.preventDefault();
 
   const name = elements.accountName.value.trim();
-  const balance = parseNumber(elements.accountStartingBalance.value);
+  const accountType = elements.accountType.value;
+  const phase = accountType === "prop" ? elements.accountPhase.value : "";
+  const initialBalance = parseNumber(elements.accountInitialBalance.value);
+  const currentBalance = parseNumber(elements.accountCurrentBalance.value);
   const errors = [];
 
   if (!name) {
     errors.push("Account name is required.");
   }
 
-  if (balance === null || balance <= 0) {
+  if (!Object.keys(ACCOUNT_TYPE_LABELS).includes(accountType)) {
+    errors.push("Choose a valid account type.");
+  }
+
+  if (accountType === "prop" && !Object.keys(PHASE_LABELS).includes(phase)) {
+    errors.push("Choose a valid prop firm phase.");
+  }
+
+  if (initialBalance === null || initialBalance <= 0) {
+    errors.push("Initial balance must be greater than 0.");
+  }
+
+  if (currentBalance === null || currentBalance <= 0) {
     errors.push("Current account balance must be greater than 0.");
   }
 
@@ -1290,10 +1497,65 @@ function handleAccountSubmit(event) {
     return;
   }
 
-  createAccount(getActiveUserId(), { name, balance });
+  createAccount(getActiveUserId(), {
+    name,
+    accountType,
+    phase,
+    initialBalance,
+    currentBalance,
+  });
   elements.accountForm.reset();
+  updateAccountPhaseVisibility();
   renderJournal();
   showToast("Trading account created.");
+}
+
+function showAccountDeleteDialog(accountId) {
+  pendingDeleteAccountId = accountId;
+  elements.accountDeleteDialog.classList.remove("is-hidden");
+  elements.confirmDeleteAccount.focus();
+}
+
+function hideAccountDeleteDialog() {
+  pendingDeleteAccountId = "";
+  elements.accountDeleteDialog.classList.add("is-hidden");
+}
+
+function handleAccountAction(event) {
+  const button = event.target.closest("button[data-account-action]");
+
+  if (!button) {
+    return;
+  }
+
+  if (button.dataset.accountAction === "delete") {
+    showAccountDeleteDialog(button.dataset.id);
+  }
+
+  if (button.dataset.accountAction === "toggle-prop-dashboard") {
+    const accountId = button.dataset.id;
+
+    if (expandedPropDashboards.has(accountId)) {
+      expandedPropDashboards.delete(accountId);
+    } else {
+      expandedPropDashboards.add(accountId);
+    }
+
+    renderJournal();
+  }
+}
+
+function confirmAccountDelete() {
+  if (!pendingDeleteAccountId) {
+    return;
+  }
+
+  deleteAccount(getActiveUserId(), pendingDeleteAccountId);
+  expandedPropDashboards.delete(pendingDeleteAccountId);
+  hideAccountDeleteDialog();
+  hideJournalDetail();
+  renderJournal();
+  showToast("Account and linked journal entries deleted.");
 }
 
 function handleJournalSubmit(event) {
@@ -1498,6 +1760,15 @@ function attachEvents() {
   });
   elements.historyList.addEventListener("click", handleHistoryAction);
   elements.accountForm.addEventListener("submit", handleAccountSubmit);
+  elements.accountType.addEventListener("change", updateAccountPhaseVisibility);
+  elements.accountsList.addEventListener("click", handleAccountAction);
+  elements.cancelDeleteAccount.addEventListener("click", hideAccountDeleteDialog);
+  elements.confirmDeleteAccount.addEventListener("click", confirmAccountDelete);
+  elements.accountDeleteDialog.addEventListener("click", (event) => {
+    if (event.target === elements.accountDeleteDialog) {
+      hideAccountDeleteDialog();
+    }
+  });
   elements.journalForm.addEventListener("submit", handleJournalSubmit);
   elements.journalList.addEventListener("click", handleJournalAction);
   elements.closeJournalDetail.addEventListener("click", hideJournalDetail);
@@ -1507,8 +1778,12 @@ function init() {
   applyTheme(getPreferredTheme());
   populateSelects();
   applyDefaultValues();
+  updateAccountPhaseVisibility();
   attachEvents();
   activeUser = getStoredUser();
+  if (activeUser) {
+    recalculateUserJournal(getActiveUserId());
+  }
   showView(activeUser ? "home" : "landing");
   setupScrollReveal();
 }

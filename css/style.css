@@ -1890,8 +1890,8 @@ progress::-moz-progress-bar {
 .account-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: center;
+  gap: 16px;
+  align-items: start;
   border: 1px solid var(--line);
   border-radius: 16px;
   background:
@@ -1917,6 +1917,207 @@ progress::-moz-progress-bar {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 850;
+}
+
+.account-card-main {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.account-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.target-badge {
+  display: inline-flex !important;
+  align-items: center;
+  min-height: 24px;
+  border: 1px solid rgb(var(--profit-green-rgb) / 0.42);
+  border-radius: 999px;
+  background: rgb(var(--profit-green-rgb) / 0.14);
+  color: var(--green) !important;
+  padding: 0 9px;
+  font-size: 0.7rem !important;
+  font-weight: 950 !important;
+}
+
+.account-status-badge {
+  display: inline-flex !important;
+  align-items: center;
+  min-height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--chip-bg);
+  color: var(--text) !important;
+  padding: 0 9px;
+  font-size: 0.7rem !important;
+  font-weight: 950 !important;
+}
+
+.account-status-badge[data-status="PASSED"] {
+  border-color: rgb(var(--profit-green-rgb) / 0.42);
+  background: rgb(var(--profit-green-rgb) / 0.14);
+  color: var(--green) !important;
+}
+
+.account-status-badge[data-status="FAILED"] {
+  border-color: rgb(var(--loss-red-rgb) / 0.42);
+  background: rgb(var(--loss-red-rgb) / 0.14);
+  color: var(--red) !important;
+}
+
+.account-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.account-balance-grid > div {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgb(var(--primary-bg-rgb) / 0.22);
+  padding: 10px;
+}
+
+.prop-dashboard {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgb(var(--accent-cyan-rgb) / 0.18);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgb(var(--accent-cyan-rgb) / 0.09), transparent 42%, rgb(var(--profit-green-rgb) / 0.07)),
+    rgb(var(--primary-bg-rgb) / 0.2);
+  padding: 12px;
+}
+
+.prop-drawdown-panels {
+  display: grid;
+  gap: 12px;
+  animation: dropdownReveal var(--motion-med) both;
+}
+
+.account-progress {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgb(var(--card-bg-rgb) / 0.44);
+  padding: 12px;
+}
+
+.account-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.account-progress-heading strong {
+  font-size: 0.92rem;
+}
+
+.account-progress-heading span {
+  color: var(--text-strong);
+  font-size: 0.86rem;
+}
+
+.account-progress-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.prop-dashboard-toggle {
+  min-width: 0;
+  min-height: 32px;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 0.74rem;
+}
+
+.account-progress-track {
+  display: block;
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgb(var(--primary-bg-rgb) / 0.42);
+}
+
+.account-progress-fill {
+  display: block;
+  width: var(--account-progress, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+  box-shadow: 0 0 22px rgb(var(--accent-cyan-rgb) / 0.28);
+  transition: width 520ms ease, background var(--motion-med), box-shadow var(--motion-med);
+  animation: progressFlow 2.6s linear infinite;
+}
+
+.account-progress[data-progress-state="safe"] .account-progress-fill {
+  background: linear-gradient(90deg, var(--green), var(--accent-cyan));
+  box-shadow: 0 0 22px rgb(var(--profit-green-rgb) / 0.24);
+}
+
+.account-progress[data-progress-state="success"] .account-progress-fill {
+  background: linear-gradient(90deg, var(--green), var(--accent-cyan));
+  box-shadow: 0 0 22px rgb(var(--profit-green-rgb) / 0.3);
+}
+
+.account-progress[data-progress-state="complete"] .account-progress-fill {
+  background: linear-gradient(90deg, var(--green), var(--warning-amber));
+  box-shadow: 0 0 26px rgb(var(--warning-amber-rgb) / 0.28);
+}
+
+.account-progress[data-progress-state="warning"] .account-progress-fill {
+  background: linear-gradient(90deg, var(--warning-amber), var(--accent-cyan));
+  box-shadow: 0 0 22px rgb(var(--warning-amber-rgb) / 0.26);
+}
+
+.account-progress[data-progress-state="danger"] .account-progress-fill,
+.account-progress[data-progress-state="critical"] .account-progress-fill {
+  background: linear-gradient(90deg, var(--red), var(--warning-amber));
+  box-shadow: 0 0 24px rgb(var(--loss-red-rgb) / 0.3);
+}
+
+.account-progress[data-progress-state="critical"] {
+  border-color: rgb(var(--loss-red-rgb) / 0.34);
+}
+
+.account-progress-values {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.account-progress-values div {
+  min-width: 0;
+}
+
+.account-progress-values dt {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.account-progress-values dd {
+  margin: 2px 0 0;
+  color: var(--text-strong);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.account-delete-button {
+  min-width: 84px;
 }
 
 .journal-preview {
@@ -1983,6 +2184,36 @@ progress::-moz-progress-bar {
 .toast.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--primary-bg-rgb) / 0.72);
+  padding: 20px;
+}
+
+.modal-card {
+  display: grid;
+  gap: 20px;
+  width: min(440px, 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--surface-strong), var(--surface));
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.modal-card p:not(.section-kicker) {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+.modal-actions {
+  justify-content: flex-end;
 }
 
 .site-footer {
@@ -2519,6 +2750,28 @@ body:not(.is-app-locked) .pin-gate {
 
   .account-card {
     grid-template-columns: 1fr;
+  }
+
+  .account-balance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-progress-values {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-progress-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .account-progress-heading-actions {
+    justify-content: flex-start;
+  }
+
+  .account-delete-button {
+    width: 100%;
   }
 }
 
