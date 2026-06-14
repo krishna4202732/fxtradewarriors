@@ -61,9 +61,9 @@ const PHASE_LABELS = {
 };
 
 const ACCOUNT_STATUS_LABELS = {
-  ACTIVE: "🟡 ACTIVE",
-  PASSED: "✅ PASSED",
-  FAILED: "❌ FAILED",
+  ACTIVE: "Active",
+  PASSED: "Passed",
+  FAILED: "Failed",
 };
 
 const elements = {
@@ -241,7 +241,7 @@ function applyTheme(theme) {
   });
 
   if (elements.themeColor) {
-    elements.themeColor.setAttribute("content", isLight ? "#F8FAFC" : "#0A0E17");
+    elements.themeColor.setAttribute("content", isLight ? "#F7F8FB" : "#070A12");
   }
 }
 

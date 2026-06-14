@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#07090d">
+  <meta name="theme-color" content="#070A12">
   <title>FX Trade Warriors - Trading Dashboard</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -27,26 +27,37 @@
       </nav>
 
       <main class="landing-hero" data-reveal>
+        <div class="landing-hero-scene" aria-hidden="true">
+          <div class="scene-grid"></div>
+          <div class="scene-line scene-line-primary"></div>
+          <div class="scene-line scene-line-secondary"></div>
+          <div class="scene-chip chip-risk">Risk first</div>
+          <div class="scene-chip chip-journal">Journal every close</div>
+          <div class="scene-chip chip-prop">Prop rules visible</div>
+        </div>
+
         <section class="landing-copy">
-          <p class="eyebrow">Precision trading cockpit</p>
-          <h1 id="landingTitle">Master risk. Build consistency.</h1>
+          <p class="eyebrow">Professional trading workspace</p>
+          <h1 id="landingTitle">FX Trade Warriors</h1>
           <p class="landing-description">
-            FX Trade Warriors brings lot sizing, prop-firm drawdown checks, and a structured trading journal into one
-            fast dashboard built for disciplined execution.
+            Your trading command center for lot sizing, journaling, prop-firm tracking, performance analysis, and risk
+            management.
           </p>
 
+          <div class="landing-actions">
+            <button class="button primary cta-button" type="button" data-view="auth">Login</button>
+            <a class="button secondary cta-button" href="#coreFeatures">Explore Features</a>
+          </div>
+
           <div class="landing-highlights" aria-label="Product highlights">
-            <span>Live risk metrics</span>
-            <span>Prop-firm guardrails</span>
-            <span>Trade journal analytics</span>
+            <span>Lot Size Calculator</span>
+            <span>Trading Journal</span>
+            <span>Prop Firm Tracking</span>
+            <span>Performance Analysis</span>
           </div>
         </section>
 
-        <section class="landing-terminal" aria-label="Trading dashboard preview">
-          <div class="terminal-toolbar">
-            <span>EURUSD</span>
-            <span class="positive">+0.42%</span>
-          </div>
+        <section class="landing-terminal" aria-label="Product capability map">
           <div class="hero-chart-animation hero-chart-large" aria-hidden="true">
             <svg class="hero-price-line" viewBox="0 0 420 170" preserveAspectRatio="none">
               <polyline class="price-line-shadow"
@@ -71,94 +82,132 @@
               <span class="hero-candle up"></span>
             </div>
           </div>
-          <div class="floating-trade-card card-profit">
-            <span>Potential Profit</span>
-            <strong>$1,250.00</strong>
+          <div class="hero-module module-calculator">
+            <span class="module-dot"></span>
+            <strong>Calculate Risk</strong>
+            <small>Plan position size before entry</small>
           </div>
-          <div class="floating-trade-card card-risk">
-            <span>Risk Usage</span>
-            <strong>18.6%</strong>
+          <div class="hero-module module-journal">
+            <span class="module-dot"></span>
+            <strong>Journal Result</strong>
+            <small>Record the decision and outcome</small>
           </div>
-          <div class="price-marker marker-buy">Buy zone</div>
-          <div class="price-marker marker-target">Target 1:2.5</div>
+          <div class="hero-module module-analytics">
+            <span class="module-dot"></span>
+            <strong>Analyze Performance</strong>
+            <small>Review patterns across accounts</small>
+          </div>
         </section>
       </main>
 
-      <section class="landing-feature-grid" aria-label="Dashboard capabilities">
-        <article class="panel landing-feature" data-reveal>
-          <span class="feature-icon" aria-hidden="true">LS</span>
-          <h2>Lot Size Calculator</h2>
-          <p>Convert risk into clean position sizing for EURUSD and XAUUSD with instant distance and reward metrics.</p>
-        </article>
-        <article class="panel landing-feature" data-reveal>
-          <span class="feature-icon" aria-hidden="true">PF</span>
-          <h2>Prop-Firm Monitor</h2>
-          <p>Check daily and maximum drawdown usage before placing trades, with warnings when risk gets too hot.</p>
-        </article>
-        <article class="panel landing-feature" data-reveal>
-          <span class="feature-icon" aria-hidden="true">TJ</span>
-          <h2>Trading Journal</h2>
-          <p>Track accounts, PnL, outcomes, lessons, mistakes, and performance statistics per trader profile.</p>
-        </article>
+      <section class="landing-section why-section" aria-labelledby="whyTitle">
+        <div class="section-heading" data-reveal>
+          <p class="section-kicker">Why FX Trade Warriors</p>
+          <h2 id="whyTitle">A cleaner way to trade with discipline.</h2>
+          <p>Plan risk, document decisions, and review performance without switching between scattered tools.</p>
+        </div>
+
+        <div class="why-grid">
+          <article class="panel landing-feature" data-reveal>
+            <span class="feature-icon icon-calculator" aria-hidden="true"></span>
+            <h3>Calculate risk instantly.</h3>
+            <p>Turn balance, stop distance, and risk settings into a clear lot-size plan.</p>
+          </article>
+          <article class="panel landing-feature" data-reveal>
+            <span class="feature-icon icon-journal" aria-hidden="true"></span>
+            <h3>Journal every trade.</h3>
+            <p>Capture execution, outcome, logic, mistakes, lessons, and notes in one flow.</p>
+          </article>
+          <article class="panel landing-feature" data-reveal>
+            <span class="feature-icon icon-shield" aria-hidden="true"></span>
+            <h3>Respect prop-firm limits.</h3>
+            <p>Keep daily and overall drawdown rules visible before risk is committed.</p>
+          </article>
+          <article class="panel landing-feature" data-reveal>
+            <span class="feature-icon icon-chart" aria-hidden="true"></span>
+            <h3>Improve consistency.</h3>
+            <p>Use account progress and statistics to see what is working over time.</p>
+          </article>
+        </div>
       </section>
 
-      <section class="landing-showcase-grid" aria-label="Platform showcase">
-        <article class="panel showcase-panel showcase-journal" data-reveal>
-          <div>
-            <p class="section-kicker">Trading Journal Showcase</p>
-            <h2>Turn every trade into a reviewable decision.</h2>
-            <p>Capture entry logic, exit logic, mistakes, lessons, account selection, final PnL, and balance movement in
-              one structured workflow.</p>
-          </div>
-          <div class="showcase-stack" aria-hidden="true">
-            <span><strong>London breakout</strong><small>TP Hit · +$420.00</small></span>
-            <span><strong>Gold pullback</strong><small>Manual exit · +$118.50</small></span>
-            <span><strong>NY reversal</strong><small>SL Hit · -$95.00</small></span>
-          </div>
-        </article>
+      <section id="coreFeatures" class="landing-section core-section" aria-labelledby="featuresTitle">
+        <div class="section-heading" data-reveal>
+          <p class="section-kicker">Core Features</p>
+          <h2 id="featuresTitle">Everything a focused FX trader needs.</h2>
+          <p>Purpose-built modules for planning, tracking, reviewing, and protecting your capital.</p>
+        </div>
 
-        <article class="panel showcase-panel showcase-risk" data-reveal>
-          <div>
-            <p class="section-kicker">Risk Management Showcase</p>
-            <h2>Know the damage before the order goes live.</h2>
-            <p>Compare trade risk against account balance, daily loss, and total drawdown so prop-firm rules stay
-              visible
-              at the exact moment they matter.</p>
-          </div>
-          <div class="risk-rings" aria-hidden="true">
-            <span style="--ring-value: 62%"><strong>62%</strong><small>Daily room</small></span>
-            <span style="--ring-value: 28%"><strong>28%</strong><small>Risk usage</small></span>
-          </div>
-        </article>
-
-        <article class="panel showcase-panel showcase-stats" data-reveal>
-          <div>
-            <p class="section-kicker">Statistics Showcase</p>
-            <h2>Read performance at a glance.</h2>
-            <p>Win rate, total trades, net PnL, best trade, worst trade, and average RR sit together in a clean trader
-              dashboard.</p>
-          </div>
-          <dl class="showcase-stats-list" aria-hidden="true">
-            <div>
-              <dt>Win Rate</dt>
-              <dd>64%</dd>
-            </div>
-            <div>
-              <dt>Net PnL</dt>
-              <dd class="positive">+$2,840</dd>
-            </div>
-            <div>
-              <dt>Avg RR</dt>
-              <dd>1:2.15</dd>
-            </div>
-          </dl>
-        </article>
+        <div class="core-feature-grid">
+          <article class="panel core-feature" data-reveal>
+            <span class="feature-icon icon-calculator" aria-hidden="true"></span>
+            <h3>Lot Size Calculator</h3>
+            <p>Size EURUSD and XAUUSD positions from percentage, fixed-dollar, or point-based risk.</p>
+          </article>
+          <article class="panel core-feature" data-reveal>
+            <span class="feature-icon icon-journal" aria-hidden="true"></span>
+            <h3>Trading Journal</h3>
+            <p>Log trade details, outcomes, balance changes, execution notes, lessons, and mistakes.</p>
+          </article>
+          <article class="panel core-feature" data-reveal>
+            <span class="feature-icon icon-shield" aria-hidden="true"></span>
+            <h3>Prop Firm Tracker</h3>
+            <p>Monitor target progress, daily drawdown, overall drawdown, and account status.</p>
+          </article>
+          <article class="panel core-feature" data-reveal>
+            <span class="feature-icon icon-account" aria-hidden="true"></span>
+            <h3>Account Management</h3>
+            <p>Create live and prop accounts, track balances, and keep journal data user-specific.</p>
+          </article>
+          <article class="panel core-feature" data-reveal>
+            <span class="feature-icon icon-chart" aria-hidden="true"></span>
+            <h3>Performance Analytics</h3>
+            <p>Review trade count, win rate, PnL, best and worst trades, and average risk reward.</p>
+          </article>
+        </div>
       </section>
 
-      <div class="landing-cta" data-reveal>
-        <p>Ready when your next setup is.</p>
+      <section class="landing-section workflow-section" aria-labelledby="workflowTitle">
+        <div class="section-heading" data-reveal>
+          <p class="section-kicker">Trading Workflow</p>
+          <h2 id="workflowTitle">From setup to review.</h2>
+          <p>A simple process for turning each trade into a measured decision.</p>
+        </div>
+
+        <ol class="workflow-track" data-reveal>
+          <li class="workflow-step">
+            <span>01</span>
+            <strong>Plan Trade</strong>
+            <p>Define the setup, entry, stop, target, and account context.</p>
+          </li>
+          <li class="workflow-step">
+            <span>02</span>
+            <strong>Calculate Risk</strong>
+            <p>Convert the plan into lot size, loss exposure, and reward profile.</p>
+          </li>
+          <li class="workflow-step">
+            <span>03</span>
+            <strong>Execute Trade</strong>
+            <p>Keep prop-firm guardrails visible before the order goes live.</p>
+          </li>
+          <li class="workflow-step">
+            <span>04</span>
+            <strong>Journal Result</strong>
+            <p>Record outcome, PnL, balance movement, notes, and lessons.</p>
+          </li>
+          <li class="workflow-step">
+            <span>05</span>
+            <strong>Analyze Performance</strong>
+            <p>Review statistics and account progress to improve the next trade.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="landing-section final-cta" data-reveal aria-labelledby="finalCtaTitle">
+        <p class="section-kicker">Ready when your next setup is</p>
+        <h2 id="finalCtaTitle">Ready To Become More Consistent?</h2>
         <button class="button primary cta-button" type="button" data-view="auth">Login To Dashboard</button>
-      </div>
+      </section>
 
       <footer class="site-footer">
         <p>&copy; Krishna Upadhyay, Do not claim this as your own</p>
@@ -257,17 +306,19 @@
 
       <main class="home-grid">
         <button class="panel feature-card" type="button" data-view="calculator">
-          <span class="feature-icon" aria-hidden="true">LS</span>
+          <span class="feature-icon icon-calculator" aria-hidden="true"></span>
           <span class="section-kicker">Calculator</span>
           <strong>Lot Size Calculator</strong>
           <small>Position sizing, prop-firm drawdown checks, and saved calculations.</small>
+          <span class="feature-card-link">Open calculator</span>
         </button>
 
         <button class="panel feature-card" type="button" data-view="journal">
-          <span class="feature-icon" aria-hidden="true">TJ</span>
+          <span class="feature-icon icon-journal" aria-hidden="true"></span>
           <span class="section-kicker">Journal</span>
           <strong>Trading Journal</strong>
           <small>Accounts, trade outcomes, balance updates, notes, and statistics.</small>
+          <span class="feature-card-link">Open journal</span>
         </button>
       </main>
 
