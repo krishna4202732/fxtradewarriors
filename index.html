@@ -750,6 +750,27 @@
       </header>
 
       <main class="journal-layout">
+        <section id="sessionStatusCard" class="session-status full-span" data-session="none"
+          aria-label="Current market session" aria-live="polite">
+          <div class="session-status-glow" aria-hidden="true"></div>
+          <div class="session-status-main">
+            <div class="session-status-time">
+              <span class="session-status-label">Current Time (IST)</span>
+              <strong id="sessionClock" class="session-status-clock">--:--:-- --</strong>
+            </div>
+            <div class="session-status-active">
+              <span class="session-status-label">Active Session</span>
+              <strong id="sessionName" class="session-status-name">--</strong>
+              <span id="sessionOverlap" class="session-status-overlap is-hidden"></span>
+            </div>
+          </div>
+          <ul class="session-status-legend" aria-hidden="true">
+            <li data-session="asian"><span class="session-dot"></span>Asian</li>
+            <li data-session="london"><span class="session-dot"></span>London</li>
+            <li data-session="newyork"><span class="session-dot"></span>New York</li>
+          </ul>
+        </section>
+
         <section class="panel account-panel" aria-labelledby="accountsTitle">
           <div class="panel-heading">
             <div>
@@ -903,8 +924,13 @@
               </label>
 
               <label class="field">
-                <span>Time Of Entry</span>
+                <span>Time Of Entry (IST)</span>
                 <input id="journalEntryTime" name="journalEntryTime" type="datetime-local" required>
+              </label>
+
+              <label class="field">
+                <span>Time Of Exit (IST)</span>
+                <input id="journalExitTime" name="journalExitTime" type="datetime-local" required>
               </label>
 
               <label class="field">
@@ -944,6 +970,18 @@
                 <div>
                   <dt>Balance After Trade</dt>
                   <dd id="journalBalanceAfter">--</dd>
+                </div>
+                <div>
+                  <dt>Trade Duration</dt>
+                  <dd id="journalDuration">--</dd>
+                </div>
+                <div>
+                  <dt>Entry Session</dt>
+                  <dd id="journalEntrySession">--</dd>
+                </div>
+                <div>
+                  <dt>Exit Session</dt>
+                  <dd id="journalExitSession">--</dd>
                 </div>
               </dl>
             </div>
@@ -990,6 +1028,14 @@
               <p class="section-kicker">Dashboard</p>
               <h2 id="journalDashboardTitle">Saved Trades</h2>
             </div>
+            <div id="exportMenu" class="export-menu">
+              <button id="exportToggle" class="button secondary" type="button" aria-haspopup="true"
+                aria-expanded="false" aria-controls="exportOptions">Export &#9662;</button>
+              <div id="exportOptions" class="export-options is-hidden" role="menu" aria-label="Export journal">
+                <button class="export-option" type="button" role="menuitem" data-export="pdf">Export as PDF</button>
+                <button class="export-option" type="button" role="menuitem" data-export="csv">Export as CSV</button>
+              </div>
+            </div>
           </div>
 
           <p id="journalEmpty" class="empty-state">No journal entries yet.</p>
@@ -1030,6 +1076,8 @@
       </div>
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
   <script type="module" src="js/app.js"></script>
 </body>
 

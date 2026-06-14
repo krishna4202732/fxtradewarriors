@@ -1,3 +1,8 @@
+import {
+  describeSessionForDateTimeLocal,
+  tradeDurationMinutes,
+} from "./sessions.js";
+
 const COLLECTIONS = {
   ACCOUNTS: "accounts",
   JOURNAL: "journal",
@@ -69,6 +74,23 @@ function roundPercent(value) {
 function getLocalDateKey(date = new Date()) {
   const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return localDate.toISOString().slice(0, 10);
+}
+
+// Derives session + duration fields from the stored entry/exit timestamps so that
+// older entries (saved before exit-time existed) are backfilled on every recalc.
+function withSessionAnalysis(entry) {
+  const entrySession = describeSessionForDateTimeLocal(entry.entryTime);
+  const exitSession = describeSessionForDateTimeLocal(entry.exitTime);
+  const durationMinutes = tradeDurationMinutes(entry.entryTime, entry.exitTime);
+
+  return {
+    ...entry,
+    entrySessionKey: entrySession ? entrySession.key : "",
+    entrySessionLabel: entrySession ? entrySession.label : "",
+    exitSessionKey: exitSession ? exitSession.key : "",
+    exitSessionLabel: exitSession ? exitSession.label : "",
+    durationMinutes: Number.isFinite(durationMinutes) ? durationMinutes : null,
+  };
 }
 
 function sortEntriesNewestFirst(entries) {
@@ -302,9 +324,10 @@ export function recalculateUserJournal(userId) {
   );
   const recalculatedEntries = sortEntriesOldestFirst(loadJournalEntries(userId)).map((entry) => {
     const account = accountsById.get(entry.accountId);
+    const analyzedEntry = withSessionAnalysis(entry);
 
     if (!account) {
-      return entry;
+      return analyzedEntry;
     }
 
     const accountBalanceBefore = roundMoney(account.currentBalance);
@@ -312,7 +335,7 @@ export function recalculateUserJournal(userId) {
     account.currentBalance = accountBalanceAfter;
 
     return {
-      ...entry,
+      ...analyzedEntry,
       accountName: account.name,
       accountBalanceBefore,
       accountBalanceAfter,

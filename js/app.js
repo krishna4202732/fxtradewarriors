@@ -40,6 +40,15 @@ import {
   loadJournalEntries,
   recalculateUserJournal,
 } from "./journal.js";
+import {
+  describeCurrentSession,
+  describeSessionForDateTimeLocal,
+  formatDuration,
+  formatIstClock,
+  IST_TIMEZONE,
+  tradeDurationMinutes,
+} from "./sessions.js";
+import { exportJournalCsv, exportJournalPdf } from "./export.js";
 
 const THEME_STORAGE_KEY = "fxTradeWarriors.theme.v1";
 const ADMIN_SAVE_PIN = "7243";
@@ -164,6 +173,7 @@ const elements = {
   journalTakeProfit: document.querySelector("#journalTakeProfit"),
   journalLotSize: document.querySelector("#journalLotSize"),
   journalEntryTime: document.querySelector("#journalEntryTime"),
+  journalExitTime: document.querySelector("#journalExitTime"),
   journalOutcome: document.querySelector("#journalOutcome"),
   journalExitPriceField: document.querySelector("#journalExitPriceField"),
   journalExitPrice: document.querySelector("#journalExitPrice"),
@@ -172,6 +182,9 @@ const elements = {
   journalRiskReward: document.querySelector("#journalRiskReward"),
   journalFinalPnl: document.querySelector("#journalFinalPnl"),
   journalBalanceAfter: document.querySelector("#journalBalanceAfter"),
+  journalDuration: document.querySelector("#journalDuration"),
+  journalEntrySession: document.querySelector("#journalEntrySession"),
+  journalExitSession: document.querySelector("#journalExitSession"),
   journalEntryLogic: document.querySelector("#journalEntryLogic"),
   journalExitLogic: document.querySelector("#journalExitLogic"),
   journalMistakes: document.querySelector("#journalMistakes"),
@@ -192,6 +205,13 @@ const elements = {
   statWorstTrade: document.querySelector("#statWorstTrade"),
   journalEmpty: document.querySelector("#journalEmpty"),
   journalList: document.querySelector("#journalList"),
+  exportMenu: document.querySelector("#exportMenu"),
+  exportToggle: document.querySelector("#exportToggle"),
+  exportOptions: document.querySelector("#exportOptions"),
+  sessionStatusCard: document.querySelector("#sessionStatusCard"),
+  sessionClock: document.querySelector("#sessionClock"),
+  sessionName: document.querySelector("#sessionName"),
+  sessionOverlap: document.querySelector("#sessionOverlap"),
   journalDetailPanel: document.querySelector("#journalDetailPanel"),
   journalDetailContent: document.querySelector("#journalDetailContent"),
   closeJournalDetail: document.querySelector("#closeJournalDetail"),
@@ -207,6 +227,7 @@ let currentJournalPreview = null;
 let historyVisible = false;
 let toastTimer = null;
 let pendingDeleteAccountId = "";
+let sessionClockTimer = null;
 const expandedPropDashboards = new Set();
 
 function getActiveUserId() {
@@ -276,6 +297,7 @@ function showView(viewName) {
 
   if (nextView === "journal") {
     renderJournal();
+    startSessionClock();
   }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -375,9 +397,50 @@ function parseNumber(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function getLocalDateTimeValue(date = new Date()) {
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return localDate.toISOString().slice(0, 16);
+// Default datetime-local value expressed as IST wall-clock, matching the "(IST)"
+// labelling on the entry/exit time fields.
+function getIstDateTimeLocalValue(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: IST_TIMEZONE,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).formatToParts(date);
+  const value = (type) => parts.find((part) => part.type === type)?.value ?? "00";
+  const hour = value("hour") === "24" ? "00" : value("hour");
+
+  return `${value("year")}-${value("month")}-${value("day")}T${hour}:${value("minute")}`;
+}
+
+function formatTimeOnly(value) {
+  if (!value) {
+    return "--";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "--";
+  }
+
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
+}
+
+function getEntryDirection(entry) {
+  if (!Number.isFinite(Number(entry.entryPrice)) || !Number.isFinite(Number(entry.stopLoss))) {
+    return null;
+  }
+
+  return Number(entry.stopLoss) < Number(entry.entryPrice) ? "Long" : "Short";
+}
+
+function renderSessionPill(label, key) {
+  const safeKey = escapeHtml(key || "none");
+  const safeLabel = escapeHtml(label || "--");
+  return `<span class="session-pill" data-session="${safeKey}">${safeLabel}</span>`;
 }
 
 function formatDateTime(value) {
@@ -463,7 +526,8 @@ function resetJournalForm() {
   elements.journalTakeProfit.value = DEFAULT_STATE.takeProfit;
   elements.journalLotSize.value = "0.01";
   elements.journalOutcome.value = "tp";
-  elements.journalEntryTime.value = getLocalDateTimeValue();
+  elements.journalEntryTime.value = getIstDateTimeLocalValue();
+  elements.journalExitTime.value = getIstDateTimeLocalValue();
   elements.journalExitPriceField.classList.add("is-hidden");
   elements.journalExitPrice.value = "";
   updateJournalPriceSteps();
@@ -1049,6 +1113,7 @@ function readJournalInput() {
     takeProfit: parseNumber(elements.journalTakeProfit.value),
     lotSize: parseNumber(elements.journalLotSize.value),
     entryTime: elements.journalEntryTime.value,
+    exitTime: elements.journalExitTime.value,
     outcome: elements.journalOutcome.value,
     exitPrice: parseNumber(elements.journalExitPrice.value),
     entryLogic: elements.journalEntryLogic.value.trim(),
@@ -1089,6 +1154,19 @@ function validateJournalInput(input) {
 
   if (!input.entryTime) {
     errors.push("Time of entry is required.");
+  }
+
+  if (!input.exitTime) {
+    errors.push("Time of exit is required.");
+  }
+
+  if (input.entryTime && input.exitTime) {
+    const entryMs = Date.parse(input.entryTime);
+    const exitMs = Date.parse(input.exitTime);
+
+    if (Number.isFinite(entryMs) && Number.isFinite(exitMs) && exitMs < entryMs) {
+      errors.push("Time of exit cannot be before time of entry.");
+    }
   }
 
   if (!Object.keys(OUTCOME_LABELS).includes(input.outcome)) {
@@ -1184,6 +1262,15 @@ function calculateJournalPreview(input) {
 function renderJournalPreview(preview) {
   currentJournalPreview = preview;
 
+  const { input } = preview;
+  const entrySession = describeSessionForDateTimeLocal(input.entryTime);
+  const exitSession = describeSessionForDateTimeLocal(input.exitTime);
+  const durationMinutes = tradeDurationMinutes(input.entryTime, input.exitTime);
+
+  setText(elements.journalDuration, formatDuration(durationMinutes));
+  setText(elements.journalEntrySession, entrySession ? entrySession.label : "--");
+  setText(elements.journalExitSession, exitSession ? exitSession.label : "--");
+
   if (!preview.calculation) {
     [
       elements.journalPotentialProfit,
@@ -1239,6 +1326,7 @@ function setJournalFormDisabled(isDisabled) {
     elements.journalTakeProfit,
     elements.journalLotSize,
     elements.journalEntryTime,
+    elements.journalExitTime,
     elements.journalOutcome,
     elements.journalExitPrice,
     elements.journalEntryLogic,
@@ -1408,6 +1496,8 @@ function renderJournalEntries(entries) {
     .map((entry) => {
       const safeId = escapeHtml(entry.id);
       const finalPnl = Number(entry.finalTradePnL) || 0;
+      const direction = getEntryDirection(entry);
+      const directionClass = direction === "Long" ? "is-long" : direction === "Short" ? "is-short" : "";
 
       return `
         <article class="journal-row" data-id="${safeId}">
@@ -1416,12 +1506,28 @@ function renderJournalEntries(entries) {
             <span>Date</span>
           </div>
           <div>
-            <strong>${escapeHtml(entry.accountName)}</strong>
-            <span>Account</span>
-          </div>
-          <div>
             <strong>${escapeHtml(entry.market)}</strong>
             <span>Market</span>
+          </div>
+          <div>
+            <strong class="${directionClass}">${escapeHtml(direction || "--")}</strong>
+            <span>Direction</span>
+          </div>
+          <div>
+            <strong>${escapeHtml(formatTimeOnly(entry.entryTime))} &rarr; ${escapeHtml(formatTimeOnly(entry.exitTime))}</strong>
+            <span>Entry &rarr; Exit (IST)</span>
+          </div>
+          <div>
+            ${renderSessionPill(entry.entrySessionLabel, entry.entrySessionKey)}
+            <span>Entry Session</span>
+          </div>
+          <div>
+            ${renderSessionPill(entry.exitSessionLabel, entry.exitSessionKey)}
+            <span>Exit Session</span>
+          </div>
+          <div>
+            <strong>${escapeHtml(formatDuration(entry.durationMinutes))}</strong>
+            <span>Duration</span>
           </div>
           <div>
             <strong>${escapeHtml(OUTCOME_LABELS[entry.outcome] || entry.outcome)}</strong>
@@ -1431,10 +1537,6 @@ function renderJournalEntries(entries) {
             <strong class="${finalPnl >= 0 ? "positive" : "negative"}">${formatSignedCurrency(finalPnl)}</strong>
             <span>Final PnL</span>
           </div>
-          <div>
-            <strong>${formatCurrency(entry.accountBalanceAfter)}</strong>
-            <span>Balance After</span>
-          </div>
           <div class="journal-actions">
             <button class="button secondary" type="button" data-journal-action="view" data-id="${safeId}">View</button>
             <button class="button danger" type="button" data-journal-action="delete" data-id="${safeId}">Delete</button>
@@ -1443,6 +1545,89 @@ function renderJournalEntries(entries) {
       `;
     })
     .join("");
+}
+
+function updateSessionStatus() {
+  if (!elements.sessionStatusCard) {
+    return;
+  }
+
+  const session = describeCurrentSession();
+
+  setText(elements.sessionClock, formatIstClock());
+
+  if (!session) {
+    return;
+  }
+
+  const isOverlap = session.sessions.length > 1;
+  const primaryKey = isOverlap ? "overlap" : session.key;
+
+  elements.sessionStatusCard.dataset.session = primaryKey;
+  setText(elements.sessionName, session.label);
+
+  if (isOverlap) {
+    elements.sessionOverlap.textContent = "Overlap Active";
+    elements.sessionOverlap.classList.remove("is-hidden");
+  } else {
+    elements.sessionOverlap.textContent = "";
+    elements.sessionOverlap.classList.add("is-hidden");
+  }
+}
+
+function startSessionClock() {
+  updateSessionStatus();
+
+  if (sessionClockTimer === null) {
+    sessionClockTimer = window.setInterval(updateSessionStatus, 1000);
+  }
+}
+
+function closeExportMenu() {
+  if (!elements.exportOptions) {
+    return;
+  }
+
+  elements.exportOptions.classList.add("is-hidden");
+  elements.exportToggle.setAttribute("aria-expanded", "false");
+}
+
+function toggleExportMenu() {
+  if (!elements.exportOptions) {
+    return;
+  }
+
+  const willOpen = elements.exportOptions.classList.contains("is-hidden");
+  elements.exportOptions.classList.toggle("is-hidden", !willOpen);
+  elements.exportToggle.setAttribute("aria-expanded", String(willOpen));
+}
+
+function handleExportAction(event) {
+  const option = event.target.closest("[data-export]");
+
+  if (!option) {
+    return;
+  }
+
+  const entries = loadJournalEntries(getActiveUserId());
+
+  if (entries.length === 0) {
+    showToast("No journal entries to export.");
+    closeExportMenu();
+    return;
+  }
+
+  if (option.dataset.export === "csv") {
+    exportJournalCsv(entries, activeUser);
+    showToast("Journal exported as CSV.");
+  }
+
+  if (option.dataset.export === "pdf") {
+    exportJournalPdf(entries, activeUser);
+    showToast("Preparing PDF export...");
+  }
+
+  closeExportMenu();
 }
 
 function renderJournal() {
@@ -1591,6 +1776,7 @@ function handleJournalSubmit(event) {
     lessonsLearned: input.lessonsLearned,
     notes: input.notes,
     entryTime: input.entryTime,
+    exitTime: input.exitTime,
   });
 
   resetJournalForm();
@@ -1605,11 +1791,18 @@ function hideJournalDetail() {
 
 function renderJournalDetail(entry) {
   const instrument = INSTRUMENTS[entry.market] || INSTRUMENTS.EURUSD;
+  const direction = getEntryDirection(entry);
   const detailRows = [
-    ["Date", formatDateTime(entry.entryTime || entry.createdAt)],
+    ["Trade Date", formatDateTime(entry.entryTime || entry.createdAt)],
     ["Account", entry.accountName],
     ["Market", entry.market],
+    ["Direction", direction || "--"],
     ["Outcome", OUTCOME_LABELS[entry.outcome] || entry.outcome],
+    ["Entry Time (IST)", entry.entryTime ? formatDateTime(entry.entryTime) : "--"],
+    ["Exit Time (IST)", entry.exitTime ? formatDateTime(entry.exitTime) : "--"],
+    ["Entry Session", entry.entrySessionLabel || "--"],
+    ["Exit Session", entry.exitSessionLabel || "--"],
+    ["Trade Duration", formatDuration(entry.durationMinutes)],
     ["Entry Price", formatPrice(entry.entryPrice, instrument)],
     ["Stop Loss", formatPrice(entry.stopLoss, instrument)],
     ["Take Profit", formatPrice(entry.takeProfit, instrument)],
@@ -1736,6 +1929,7 @@ function attachEvents() {
     elements.journalTakeProfit,
     elements.journalLotSize,
     elements.journalEntryTime,
+    elements.journalExitTime,
     elements.journalOutcome,
     elements.journalExitPrice,
   ];
@@ -1772,6 +1966,23 @@ function attachEvents() {
   elements.journalForm.addEventListener("submit", handleJournalSubmit);
   elements.journalList.addEventListener("click", handleJournalAction);
   elements.closeJournalDetail.addEventListener("click", hideJournalDetail);
+
+  if (elements.exportToggle) {
+    elements.exportToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleExportMenu();
+    });
+  }
+
+  if (elements.exportOptions) {
+    elements.exportOptions.addEventListener("click", handleExportAction);
+  }
+
+  document.addEventListener("click", (event) => {
+    if (elements.exportMenu && !elements.exportMenu.contains(event.target)) {
+      closeExportMenu();
+    }
+  });
 }
 
 function init() {
