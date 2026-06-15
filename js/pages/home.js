@@ -8,8 +8,8 @@ import { recalculateUserJournal } from "../journal.js";
 import { requireAuth, initLogout } from "../router.js";
 import { mountSharedComponents } from "../components.js";
 
-function init() {
-  const user = requireAuth();
+async function init() {
+  const user = await requireAuth();
 
   if (!user) {
     return;

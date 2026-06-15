@@ -1168,8 +1168,8 @@ function attachEvents() {
   });
 }
 
-function init() {
-  activeUser = requireAuth();
+async function init() {
+  activeUser = await requireAuth();
 
   if (!activeUser) {
     return;

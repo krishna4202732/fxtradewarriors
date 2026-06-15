@@ -39,11 +39,16 @@
               <span class="theme-toggle-text">Dark</span>
             </button>
           </div>
-          <p class="auth-subtitle">Sign in to your trading dashboard.</p>
+          <p id="authSubtitle" class="auth-subtitle">Sign in to your trading dashboard.</p>
+
+          <label class="field" id="displayNameField" hidden>
+            <span>Display Name</span>
+            <input id="signupName" name="name" type="text" autocomplete="name">
+          </label>
 
           <label class="field">
-            <span>Username</span>
-            <input id="loginUsername" name="username" type="text" autocomplete="username" required>
+            <span>Email</span>
+            <input id="loginEmail" name="email" type="email" autocomplete="email" required>
           </label>
 
           <label class="field">
@@ -51,7 +56,10 @@
             <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
           </label>
 
-          <button class="button primary" type="submit">Login</button>
+          <button class="button primary" type="submit" id="authSubmit">Login</button>
+          <button class="button secondary" type="button" id="googleLogin">Continue with Google</button>
+          <button class="button secondary" type="button" id="forgotPassword">Forgot password?</button>
+          <button class="button secondary" type="button" id="toggleMode">Create an account</button>
           <a class="button secondary" href="index.html">Back To Overview</a>
           <p id="loginError" class="pin-error" aria-live="polite"></p>
         </form>
