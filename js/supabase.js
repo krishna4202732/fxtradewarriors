@@ -26,7 +26,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // The Supabase JS SDK is loaded from its official ESM CDN so it works in this
 // no-build / no-Node project, exactly like jsPDF is loaded in journal.html.
 // -----------------------------------------------------------------------------
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 /**
  * True only when both credentials have been filled in above. Helper functions in
