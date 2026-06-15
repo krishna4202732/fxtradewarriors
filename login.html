@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070A12">
+  <title>Login - FX Trade Warriors</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <section id="authView" class="page-view auth-view" aria-labelledby="authTitle">
+      <div class="auth-frame">
+        <div class="auth-visual" aria-hidden="true">
+          <div class="auth-orbit"></div>
+          <div class="auth-signal-card">
+            <span>Secure session</span>
+            <strong>Encrypted local workspace</strong>
+          </div>
+          <div class="auth-signal-card signal-secondary">
+            <span>Risk engine</span>
+            <strong>Ready</strong>
+          </div>
+        </div>
+
+        <form id="loginForm" class="pin-card auth-card">
+          <div class="auth-card-top">
+            <div>
+              <p class="section-kicker">Secure Access</p>
+              <h1 id="authTitle">FX Trade Warriors</h1>
+            </div>
+            <button class="theme-toggle compact-theme-toggle" type="button" data-theme-toggle
+              aria-label="Switch to light mode" aria-pressed="false">
+              <span class="theme-toggle-track" aria-hidden="true">
+                <span class="theme-toggle-icon"></span>
+              </span>
+              <span class="theme-toggle-text">Dark</span>
+            </button>
+          </div>
+          <p class="auth-subtitle">Sign in to your trading dashboard.</p>
+
+          <label class="field">
+            <span>Username</span>
+            <input id="loginUsername" name="username" type="text" autocomplete="username" required>
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+          </label>
+
+          <button class="button primary" type="submit">Login</button>
+          <a class="button secondary" href="index.html">Back To Overview</a>
+          <p id="loginError" class="pin-error" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <div data-component="toast"></div>
+  <script type="module" src="js/pages/login.js"></script>
+</body>
+
+</html>

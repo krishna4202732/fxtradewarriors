@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070A12">
+  <title>Trading Journal - FX Trade Warriors</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <section id="journalView" class="page-view" aria-labelledby="journalTitle">
+      <header class="app-header page-header">
+        <div class="header-content">
+          <p class="eyebrow">FX Trade Warriors</p>
+          <h1 id="journalTitle">Trading Journal</h1>
+          <p class="header-subtitle">Track accounts, outcomes, notes, and performance per user.</p>
+        </div>
+        <div class="header-tools">
+          <a class="button secondary" href="home.html">Home</a>
+          <a class="button secondary" href="calculator.html">Calculator</a>
+          <a class="button danger" href="login.html" data-logout>Logout</a>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode"
+            aria-pressed="false">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-icon"></span>
+            </span>
+            <span class="theme-toggle-text">Dark</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="journal-layout">
+        <section id="sessionStatusCard" class="session-status full-span" data-session="none"
+          aria-label="Current market session" aria-live="polite">
+          <div class="session-status-glow" aria-hidden="true"></div>
+          <div class="session-status-main">
+            <div class="session-status-time">
+              <span class="session-status-label">Current Time (IST)</span>
+              <strong id="sessionClock" class="session-status-clock">--:--:-- --</strong>
+            </div>
+            <div class="session-status-active">
+              <span class="session-status-label">Active Session</span>
+              <strong id="sessionName" class="session-status-name">--</strong>
+              <span id="sessionOverlap" class="session-status-overlap is-hidden"></span>
+            </div>
+          </div>
+          <ul class="session-status-legend" aria-hidden="true">
+            <li data-session="asian"><span class="session-dot"></span>Asian</li>
+            <li data-session="london"><span class="session-dot"></span>London</li>
+            <li data-session="newyork"><span class="session-dot"></span>New York</li>
+          </ul>
+        </section>
+
+        <section class="panel account-panel" aria-labelledby="accountsTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Accounts</p>
+              <h2 id="accountsTitle">Trading Accounts</h2>
+            </div>
+          </div>
+
+          <form id="accountForm" class="form-grid account-form" novalidate>
+            <label class="field">
+              <span>Account Name</span>
+              <input id="accountName" name="accountName" type="text" autocomplete="off" required>
+            </label>
+
+            <label class="field">
+              <span>Account Type</span>
+              <select id="accountType" name="accountType" required>
+                <option value="live">Live Account</option>
+                <option value="prop">Prop Firm Account</option>
+              </select>
+            </label>
+
+            <label id="accountPhaseField" class="field is-hidden">
+              <span>Phase</span>
+              <select id="accountPhase" name="accountPhase">
+                <option value="phase1">Phase 1</option>
+                <option value="phase2">Phase 2</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Initial Balance</span>
+              <input id="accountInitialBalance" name="accountInitialBalance" type="number" min="0" step="0.01"
+                inputmode="decimal" autocomplete="off" required>
+            </label>
+
+            <label class="field">
+              <span>Current Balance</span>
+              <input id="accountCurrentBalance" name="accountCurrentBalance" type="number" min="0" step="0.01"
+                inputmode="decimal" autocomplete="off" required>
+            </label>
+
+            <button class="button primary" type="submit">Create Account</button>
+          </form>
+
+          <div id="accountErrorPanel" class="alert-panel error-panel is-hidden" role="alert" aria-live="polite">
+            <strong>Account error</strong>
+            <ul id="accountErrorList"></ul>
+          </div>
+
+          <div id="accountsList" class="accounts-list" aria-live="polite"></div>
+        </section>
+
+        <section class="panel statistics-panel" aria-labelledby="statsTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Statistics</p>
+              <h2 id="statsTitle">Performance</h2>
+            </div>
+          </div>
+
+          <dl class="stats-grid">
+            <div>
+              <dt>Total Trades</dt>
+              <dd id="statTotalTrades">0</dd>
+            </div>
+            <div>
+              <dt>Winning Trades</dt>
+              <dd id="statWinningTrades">0</dd>
+            </div>
+            <div>
+              <dt>Losing Trades</dt>
+              <dd id="statLosingTrades">0</dd>
+            </div>
+            <div>
+              <dt>Win Rate</dt>
+              <dd id="statWinRate">--</dd>
+            </div>
+            <div>
+              <dt>Total Profit</dt>
+              <dd id="statTotalProfit" class="positive">--</dd>
+            </div>
+            <div>
+              <dt>Total Loss</dt>
+              <dd id="statTotalLoss" class="negative">--</dd>
+            </div>
+            <div>
+              <dt>Net PnL</dt>
+              <dd id="statNetPnl">--</dd>
+            </div>
+            <div>
+              <dt>Average RR</dt>
+              <dd id="statAverageRr">--</dd>
+            </div>
+            <div>
+              <dt>Best Trade</dt>
+              <dd id="statBestTrade">--</dd>
+            </div>
+            <div>
+              <dt>Worst Trade</dt>
+              <dd id="statWorstTrade">--</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel journal-entry-panel full-span" aria-labelledby="newJournalTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">New Entry</p>
+              <h2 id="newJournalTitle">Trade Details</h2>
+            </div>
+          </div>
+
+          <p id="journalAccountEmpty" class="empty-state is-hidden">Create a trading account before adding journal
+            entries.</p>
+
+          <form id="journalForm" novalidate>
+            <div class="form-grid journal-form-grid">
+              <label class="field">
+                <span>Account Selection</span>
+                <select id="journalAccount" name="journalAccount" required></select>
+              </label>
+
+              <label class="field">
+                <span>Market</span>
+                <select id="journalMarket" name="journalMarket" required></select>
+              </label>
+
+              <label class="field">
+                <span>Entry Price</span>
+                <input id="journalEntryPrice" name="journalEntryPrice" type="number" min="0" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Stop Loss</span>
+                <input id="journalStopLoss" name="journalStopLoss" type="number" min="0" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Take Profit</span>
+                <input id="journalTakeProfit" name="journalTakeProfit" type="number" min="0" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Lot Size</span>
+                <input id="journalLotSize" name="journalLotSize" type="number" min="0" step="0.01" inputmode="decimal"
+                  autocomplete="off" required>
+              </label>
+
+              <label class="field">
+                <span>Time Of Entry (IST)</span>
+                <input id="journalEntryTime" name="journalEntryTime" type="datetime-local" required>
+              </label>
+
+              <label class="field">
+                <span>Time Of Exit (IST)</span>
+                <input id="journalExitTime" name="journalExitTime" type="datetime-local" required>
+              </label>
+
+              <label class="field">
+                <span>Trade Outcome</span>
+                <select id="journalOutcome" name="journalOutcome" required>
+                  <option value="tp">TP Hit</option>
+                  <option value="sl">SL Hit</option>
+                  <option value="manual">Exited Before TP/SL</option>
+                </select>
+              </label>
+
+              <label id="journalExitPriceField" class="field is-hidden">
+                <span>Exit Price</span>
+                <input id="journalExitPrice" name="journalExitPrice" type="number" min="0" inputmode="decimal"
+                  autocomplete="off">
+              </label>
+            </div>
+
+            <div class="journal-preview">
+              <dl class="metric-list">
+                <div>
+                  <dt>Potential Profit at TP</dt>
+                  <dd id="journalPotentialProfit" class="positive">--</dd>
+                </div>
+                <div>
+                  <dt>Potential Loss at SL</dt>
+                  <dd id="journalPotentialLoss" class="negative">--</dd>
+                </div>
+                <div>
+                  <dt>Risk Reward Ratio</dt>
+                  <dd id="journalRiskReward">--</dd>
+                </div>
+                <div>
+                  <dt>Final Trade PnL</dt>
+                  <dd id="journalFinalPnl">--</dd>
+                </div>
+                <div>
+                  <dt>Balance After Trade</dt>
+                  <dd id="journalBalanceAfter">--</dd>
+                </div>
+                <div>
+                  <dt>Trade Duration</dt>
+                  <dd id="journalDuration">--</dd>
+                </div>
+                <div>
+                  <dt>Entry Session</dt>
+                  <dd id="journalEntrySession">--</dd>
+                </div>
+                <div>
+                  <dt>Exit Session</dt>
+                  <dd id="journalExitSession">--</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="form-grid notes-grid">
+              <label class="field">
+                <span>Entry Logic</span>
+                <textarea id="journalEntryLogic" name="journalEntryLogic"></textarea>
+              </label>
+
+              <label class="field">
+                <span>Exit Logic</span>
+                <textarea id="journalExitLogic" name="journalExitLogic"></textarea>
+              </label>
+
+              <label class="field">
+                <span>Mistakes</span>
+                <textarea id="journalMistakes" name="journalMistakes"></textarea>
+              </label>
+
+              <label class="field">
+                <span>Lessons Learned</span>
+                <textarea id="journalLessonsLearned" name="journalLessonsLearned"></textarea>
+              </label>
+
+              <label class="field full-field">
+                <span>Additional Notes</span>
+                <textarea id="journalNotes" name="journalNotes"></textarea>
+              </label>
+            </div>
+
+            <div id="journalErrorPanel" class="alert-panel error-panel is-hidden" role="alert" aria-live="polite">
+              <strong>Journal error</strong>
+              <ul id="journalErrorList"></ul>
+            </div>
+
+            <button id="saveJournalEntry" class="button primary" type="submit">Save Journal Entry</button>
+          </form>
+        </section>
+
+        <section class="panel journal-dashboard full-span" aria-labelledby="journalDashboardTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Dashboard</p>
+              <h2 id="journalDashboardTitle">Saved Trades</h2>
+            </div>
+            <div id="exportMenu" class="export-menu">
+              <button id="exportToggle" class="button secondary" type="button" aria-haspopup="true"
+                aria-expanded="false" aria-controls="exportOptions">Export &#9662;</button>
+              <div id="exportOptions" class="export-options is-hidden" role="menu" aria-label="Export journal">
+                <button class="export-option" type="button" role="menuitem" data-export="pdf">Export as PDF</button>
+                <button class="export-option" type="button" role="menuitem" data-export="csv">Export as CSV</button>
+              </div>
+            </div>
+          </div>
+
+          <p id="journalEmpty" class="empty-state">No journal entries yet.</p>
+          <div id="journalList" class="journal-list" aria-live="polite"></div>
+        </section>
+
+        <section id="journalDetailPanel" class="panel journal-detail-panel full-span is-hidden"
+          aria-labelledby="journalDetailTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Trade Review</p>
+              <h2 id="journalDetailTitle">Journal Entry</h2>
+            </div>
+            <button id="closeJournalDetail" class="button secondary" type="button">Close</button>
+          </div>
+          <div id="journalDetailContent" class="journal-detail-content"></div>
+        </section>
+      </main>
+
+      <div data-component="footer"></div>
+    </section>
+  </div>
+
+  <div data-component="toast"></div>
+  <div id="accountDeleteDialog" class="modal-overlay is-hidden" role="dialog" aria-modal="true"
+    aria-labelledby="accountDeleteTitle">
+    <div class="modal-card">
+      <div>
+        <p class="section-kicker">Delete Account</p>
+        <h2 id="accountDeleteTitle">Are you sure you want to delete this account?</h2>
+        <p>All journal entries associated with this account will be removed.</p>
+      </div>
+      <div class="button-row modal-actions">
+        <button id="cancelDeleteAccount" class="button secondary" type="button">Cancel</button>
+        <button id="confirmDeleteAccount" class="button danger" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
+  <script type="module" src="js/pages/journal.js"></script>
+</body>
+
+</html>

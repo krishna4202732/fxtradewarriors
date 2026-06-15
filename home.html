@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070A12">
+  <title>Home - FX Trade Warriors</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <section id="homeView" class="page-view" aria-labelledby="homeTitle">
+      <header class="app-header home-header">
+        <div class="hero-chart-animation" aria-hidden="true">
+          <svg class="hero-price-line" viewBox="0 0 420 170" preserveAspectRatio="none">
+            <polyline class="price-line-shadow"
+              points="4,126 38,112 70,118 103,84 136,96 170,72 203,78 238,52 274,66 313,38 355,48 416,24"></polyline>
+            <polyline class="price-line-main"
+              points="4,126 38,112 70,118 103,84 136,96 170,72 203,78 238,52 274,66 313,38 355,48 416,24"></polyline>
+          </svg>
+          <div class="hero-candles">
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle down"></span>
+            <span class="hero-candle up"></span>
+            <span class="hero-candle up"></span>
+          </div>
+        </div>
+        <div class="header-content">
+          <p class="eyebrow">FX Trade Warriors</p>
+          <h1 id="homeTitle">Welcome, <span id="homeDisplayName">Trader</span></h1>
+          <p class="header-subtitle">Choose your calculator or journal workspace.</p>
+        </div>
+        <div class="header-tools">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode"
+            aria-pressed="false">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-icon"></span>
+            </span>
+            <span class="theme-toggle-text">Dark</span>
+          </button>
+          <a class="button danger" href="login.html" data-logout>Logout</a>
+        </div>
+      </header>
+
+      <main class="home-grid">
+        <a class="panel feature-card" href="calculator.html">
+          <span class="feature-icon icon-calculator" aria-hidden="true"></span>
+          <span class="section-kicker">Calculator</span>
+          <strong>Lot Size Calculator</strong>
+          <small>Position sizing, prop-firm drawdown checks, and saved calculations.</small>
+          <span class="feature-card-link">Open calculator</span>
+        </a>
+
+        <a class="panel feature-card" href="journal.html">
+          <span class="feature-icon icon-journal" aria-hidden="true"></span>
+          <span class="section-kicker">Journal</span>
+          <strong>Trading Journal</strong>
+          <small>Accounts, trade outcomes, balance updates, notes, and statistics.</small>
+          <span class="feature-card-link">Open journal</span>
+        </a>
+      </main>
+
+      <div data-component="footer"></div>
+    </section>
+  </div>
+
+  <div data-component="toast"></div>
+  <script type="module" src="js/pages/home.js"></script>
+</body>
+
+</html>
