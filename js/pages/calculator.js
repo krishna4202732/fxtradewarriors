@@ -24,6 +24,7 @@ import { calculatePropFirmStatus } from "../propFirm.js";
 import {
   clearAllHistory,
   deleteTrade,
+  initHistory,
   loadHistory,
   saveTrade,
 } from "../history.js";
@@ -477,7 +478,7 @@ function createHistoryRow(trade) {
   `;
 }
 
-function saveCurrentCalculation() {
+async function saveCurrentCalculation() {
   if (!currentCalculation || !activeUser) {
     return;
   }
@@ -489,7 +490,7 @@ function saveCurrentCalculation() {
     return;
   }
 
-  saveTrade(getActiveUserId(), currentCalculation);
+  await saveTrade(getActiveUserId(), currentCalculation);
   renderHistory();
   showToast("Calculation saved.");
 }
@@ -512,7 +513,7 @@ function recalculateTrade(tradeId) {
   showToast("Saved trade loaded.");
 }
 
-function handleHistoryAction(event) {
+async function handleHistoryAction(event) {
   const button = event.target.closest("button[data-action]");
 
   if (!button) {
@@ -522,7 +523,7 @@ function handleHistoryAction(event) {
   const tradeId = button.dataset.id;
 
   if (button.dataset.action === "delete") {
-    deleteTrade(getActiveUserId(), tradeId);
+    await deleteTrade(getActiveUserId(), tradeId);
     renderHistory();
     showToast("Trade deleted.");
   }
@@ -564,8 +565,8 @@ function attachEvents() {
   elements.copySummary.addEventListener("click", copySummary);
   elements.saveCalculation.addEventListener("click", saveCurrentCalculation);
   elements.toggleHistory.addEventListener("click", toggleHistory);
-  elements.clearHistory.addEventListener("click", () => {
-    clearAllHistory(getActiveUserId());
+  elements.clearHistory.addEventListener("click", async () => {
+    await clearAllHistory(getActiveUserId());
     renderHistory();
     showToast("History cleared.");
   });
@@ -577,6 +578,14 @@ async function init() {
 
   if (!activeUser) {
     return;
+  }
+
+  // Hydrate calculator history from Supabase (runs the one-time localStorage
+  // migration first) before the first synchronous render reads it.
+  try {
+    await initHistory(getActiveUserId());
+  } catch (error) {
+    console.error("Failed to load calculator history:", error.message);
   }
 
   mountSharedComponents();

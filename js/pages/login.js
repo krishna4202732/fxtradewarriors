@@ -15,7 +15,6 @@ import {
   updatePassword,
   onAuthStateChange,
 } from "../auth.js";
-import { recalculateUserJournal } from "../journal.js";
 import { redirectIfAuthenticated, ROUTES } from "../router.js";
 import { mountSharedComponents } from "../components.js";
 
@@ -93,10 +92,9 @@ function isRecoveryFlow() {
   return hash.includes("type=recovery") || search.includes("type=recovery");
 }
 
-// On success, keep stored balances consistent (matching the old login path) and
-// navigate to the dashboard via a real page load.
-function completeLogin(user) {
-  recalculateUserJournal(user.username);
+// On success, navigate to the dashboard via a real page load. Data hydration +
+// the one-time localStorage migration happen on the home page (initUserData).
+function completeLogin() {
   elements.loginForm.reset();
   window.location.href = ROUTES.HOME;
 }

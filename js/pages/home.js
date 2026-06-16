@@ -4,7 +4,7 @@
 
 import { initTheme } from "../theme.js";
 import { setText, setupScrollReveal } from "../dom-utils.js";
-import { recalculateUserJournal } from "../journal.js";
+import { initUserData } from "../journal.js";
 import { requireAuth, initLogout } from "../router.js";
 import { mountSharedComponents } from "../components.js";
 
@@ -15,8 +15,13 @@ async function init() {
     return;
   }
 
-  // Keep stored balances current, matching the SPA's home render path.
-  recalculateUserJournal(user.username);
+  // Hydrate from Supabase + run the one-time localStorage migration, then keep
+  // stored balances current — matching the SPA's home render path.
+  try {
+    await initUserData(user.username);
+  } catch (error) {
+    console.error("Failed to load your data:", error.message);
+  }
 
   mountSharedComponents();
   initTheme();

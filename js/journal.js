@@ -2,6 +2,8 @@ import {
   describeSessionForDateTimeLocal,
   tradeDurationMinutes,
 } from "./sessions.js";
+import * as db from "./database.js";
+import { migrateLegacyData } from "./migrate.js";
 
 const COLLECTIONS = {
   ACCOUNTS: "accounts",
@@ -31,8 +33,14 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function getUserStorageKey(userId, collection) {
-  return `fx.user.${userId}.${collection}`;
+// In-memory cache, hydrated from Supabase once per page load by initUserData().
+// All business logic below operates on this cache synchronously, so rendering
+// (and recalculateUserJournal) stays synchronous; Supabase persistence is handled
+// by the async mutation functions and initUserData. Keyed by `${userId}:${name}`.
+const cache = new Map();
+
+function cacheKey(userId, collection) {
+  return `${userId}:${collection}`;
 }
 
 function readCollection(userId, collection) {
@@ -40,12 +48,8 @@ function readCollection(userId, collection) {
     return [];
   }
 
-  try {
-    const parsed = JSON.parse(localStorage.getItem(getUserStorageKey(userId, collection)) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    return [];
-  }
+  const records = cache.get(cacheKey(userId, collection));
+  return Array.isArray(records) ? records : [];
 }
 
 function writeCollection(userId, collection, records) {
@@ -54,7 +58,7 @@ function writeCollection(userId, collection, records) {
   }
 
   const normalizedRecords = Array.isArray(records) ? records : [];
-  localStorage.setItem(getUserStorageKey(userId, collection), JSON.stringify(normalizedRecords));
+  cache.set(cacheKey(userId, collection), normalizedRecords);
   return normalizedRecords;
 }
 
@@ -261,7 +265,31 @@ export function loadJournalEntries(userId) {
   return sortEntriesNewestFirst(readCollection(userId, COLLECTIONS.JOURNAL));
 }
 
-export function createAccount(userId, accountInput) {
+// Hydrate the in-memory cache from Supabase for this page load. Runs the
+// one-time localStorage → Supabase migration first, then recomputes derived
+// fields and persists the (re)computed account balances so the stored daily
+// snapshot stays current — mirroring the old "recalc on render" persistence.
+export async function initUserData(userId) {
+  if (!userId) {
+    return { accounts: [], entries: [] };
+  }
+
+  await migrateLegacyData(userId);
+
+  const [accounts, entries] = await Promise.all([
+    db.getAccounts(),
+    db.getJournalEntries(),
+  ]);
+
+  writeCollection(userId, COLLECTIONS.ACCOUNTS, accounts);
+  writeCollection(userId, COLLECTIONS.JOURNAL, entries);
+
+  const result = recalculateUserJournal(userId);
+  await db.upsertAccounts(result.accounts);
+  return result;
+}
+
+export async function createAccount(userId, accountInput) {
   const accountType = normalizeAccountType(accountInput.accountType);
   const initialBalance = roundMoney(accountInput.initialBalance);
   const currentBalance = roundMoney(accountInput.currentBalance);
@@ -279,10 +307,11 @@ export function createAccount(userId, accountInput) {
   const accounts = [account, ...loadAccounts(userId)];
 
   writeCollection(userId, COLLECTIONS.ACCOUNTS, accounts);
+  await db.upsertAccount(account);
   return account;
 }
 
-export function addJournalEntry(userId, entryInput) {
+export async function addJournalEntry(userId, entryInput) {
   const entry = {
     id: createId(),
     userId,
@@ -292,23 +321,33 @@ export function addJournalEntry(userId, entryInput) {
   const entries = [entry, ...loadJournalEntries(userId)];
 
   writeCollection(userId, COLLECTIONS.JOURNAL, entries);
-  return recalculateUserJournal(userId);
+  const result = recalculateUserJournal(userId);
+  await db.upsertJournalEntry(entry);
+  await db.upsertAccounts(result.accounts);
+  return result;
 }
 
-export function deleteJournalEntry(userId, entryId) {
+export async function deleteJournalEntry(userId, entryId) {
   const entries = loadJournalEntries(userId).filter((entry) => entry.id !== entryId);
 
   writeCollection(userId, COLLECTIONS.JOURNAL, entries);
-  return recalculateUserJournal(userId);
+  const result = recalculateUserJournal(userId);
+  await db.deleteJournalEntry(entryId);
+  await db.upsertAccounts(result.accounts);
+  return result;
 }
 
-export function deleteAccount(userId, accountId) {
+export async function deleteAccount(userId, accountId) {
   const accounts = loadAccounts(userId).filter((account) => account.id !== accountId);
   const entries = loadJournalEntries(userId).filter((entry) => entry.accountId !== accountId);
 
   writeCollection(userId, COLLECTIONS.ACCOUNTS, accounts);
   writeCollection(userId, COLLECTIONS.JOURNAL, entries);
-  return recalculateUserJournal(userId);
+  const result = recalculateUserJournal(userId);
+  // ON DELETE CASCADE removes the linked journal entries in Supabase too.
+  await db.deleteAccount(accountId);
+  await db.upsertAccounts(result.accounts);
+  return result;
 }
 
 export function recalculateUserJournal(userId) {

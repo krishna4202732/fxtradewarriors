@@ -18,6 +18,7 @@ import {
   createAccount,
   deleteAccount,
   deleteJournalEntry,
+  initUserData,
   loadAccounts,
   loadJournalEntries,
   recalculateUserJournal,
@@ -876,7 +877,7 @@ function renderJournal() {
   updateJournalPreview();
 }
 
-function handleAccountSubmit(event) {
+async function handleAccountSubmit(event) {
   event.preventDefault();
 
   const name = elements.accountName.value.trim();
@@ -912,7 +913,7 @@ function handleAccountSubmit(event) {
     return;
   }
 
-  createAccount(getActiveUserId(), {
+  await createAccount(getActiveUserId(), {
     name,
     accountType,
     phase,
@@ -960,12 +961,12 @@ function handleAccountAction(event) {
   }
 }
 
-function confirmAccountDelete() {
+async function confirmAccountDelete() {
   if (!pendingDeleteAccountId) {
     return;
   }
 
-  deleteAccount(getActiveUserId(), pendingDeleteAccountId);
+  await deleteAccount(getActiveUserId(), pendingDeleteAccountId);
   expandedPropDashboards.delete(pendingDeleteAccountId);
   hideAccountDeleteDialog();
   hideJournalDetail();
@@ -973,7 +974,7 @@ function confirmAccountDelete() {
   showToast("Account and linked journal entries deleted.");
 }
 
-function handleJournalSubmit(event) {
+async function handleJournalSubmit(event) {
   event.preventDefault();
 
   const preview = updateJournalPreview({ showErrors: true });
@@ -984,7 +985,7 @@ function handleJournalSubmit(event) {
 
   const { input, calculation } = preview;
 
-  addJournalEntry(getActiveUserId(), {
+  await addJournalEntry(getActiveUserId(), {
     accountId: input.account.id,
     accountName: input.account.name,
     market: input.market,
@@ -1083,7 +1084,7 @@ function renderJournalDetail(entry) {
   elements.journalDetailPanel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function handleJournalAction(event) {
+async function handleJournalAction(event) {
   const button = event.target.closest("button[data-journal-action]");
 
   if (!button) {
@@ -1110,7 +1111,7 @@ function handleJournalAction(event) {
       return;
     }
 
-    deleteJournalEntry(getActiveUserId(), entryId);
+    await deleteJournalEntry(getActiveUserId(), entryId);
     hideJournalDetail();
     renderJournal();
     showToast("Journal entry deleted.");
@@ -1173,6 +1174,15 @@ async function init() {
 
   if (!activeUser) {
     return;
+  }
+
+  // Hydrate the in-memory cache from Supabase (runs the one-time localStorage
+  // migration first) before any synchronous render reads it.
+  try {
+    await initUserData(getActiveUserId());
+  } catch (error) {
+    showToast("Could not load your journal data. Please refresh.");
+    console.error("initUserData failed:", error.message);
   }
 
   mountSharedComponents();

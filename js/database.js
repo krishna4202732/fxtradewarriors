@@ -1,29 +1,23 @@
 // =============================================================================
-// Supabase data-access helpers
+// Supabase data-access layer (JSONB model)
 // =============================================================================
 //
-// Thin wrappers around the Supabase client for the four app tables. These are
-// PREPARED for the future migration — nothing in the current app calls them yet,
-// and localStorage remains the live data source. Once auth is wired up, the
-// existing modules (journal.js, history.js, etc.) can switch to these.
+// Each app record (account / journal entry / calculator history) is stored
+// verbatim in a `data` jsonb column, with stable top-level columns for identity,
+// ownership and ordering. These helpers map between the camelCase app objects
+// used everywhere else and the table rows, so journal.js / history.js never touch
+// Supabase directly.
 //
-// Conventions:
-//  - Each helper throws on error so callers can use try/catch, mirroring how the
-//    rest of the codebase signals failure.
-//  - `user_id` is intentionally NOT passed in by callers. Supabase sets it from
-//    the authenticated session (see DEFAULT auth.uid() in sql/schema.sql) and RLS
-//    guarantees a user only ever sees their own rows. When auth lands, inserts
-//    just work; until then these helpers throw a clear "not configured" error.
-//  - DB columns use snake_case (Postgres convention); the app objects use
-//    camelCase. Mapping is left to the migration step to keep this layer thin.
+//  - Reads return the app objects (camelCase), newest first.
+//  - Writes are upserts keyed on the client-generated id, so re-saving an
+//    account (e.g. after a balance recalculation) updates in place.
+//  - user_id is set by the database default (auth.uid()); RLS guarantees a user
+//    only ever reads/writes their own rows.
+//  - Each helper throws on error.
 // =============================================================================
 
 import { getSupabaseClient, TABLES } from "./supabase.js";
 
-/**
- * Unwraps a Supabase response, throwing on error and returning the data.
- * @param {{ data: any, error: any }} response
- */
 function unwrap({ data, error }) {
   if (error) {
     throw new Error(error.message || "Supabase request failed.");
@@ -32,139 +26,188 @@ function unwrap({ data, error }) {
   return data;
 }
 
-// ---------------------------------------------------------------------------
-// Trading accounts
-// ---------------------------------------------------------------------------
+// --- Row <-> app-object mappers --------------------------------------------
 
-/**
- * Insert a new trading account. `account` should use snake_case columns
- * (e.g. account_name, account_type, phase, initial_balance, ...). user_id is
- * filled in by Supabase from the session.
- */
-export async function createAccount(account) {
-  const supabase = getSupabaseClient();
-  return unwrap(
-    await supabase.from(TABLES.TRADING_ACCOUNTS).insert(account).select().single(),
-  );
+function accountToRow(account) {
+  return { id: account.id, data: account, created_at: account.createdAt };
 }
 
-/**
- * Update an existing trading account by id with a partial set of columns.
- */
-export async function updateAccount(id, updates) {
-  const supabase = getSupabaseClient();
-  return unwrap(
-    await supabase
-      .from(TABLES.TRADING_ACCOUNTS)
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single(),
-  );
+function rowToAccount(row) {
+  // `data` is authoritative; id/userId are reasserted from the columns.
+  return { ...row.data, id: row.id, userId: row.user_id };
 }
 
-/**
- * Delete a trading account by id. Associated journal_entries are removed by the
- * ON DELETE CASCADE foreign key defined in the schema.
- */
-export async function deleteAccount(id) {
-  const supabase = getSupabaseClient();
-  return unwrap(await supabase.from(TABLES.TRADING_ACCOUNTS).delete().eq("id", id));
+function entryToRow(entry) {
+  return {
+    id: entry.id,
+    account_id: entry.accountId || null,
+    data: entry,
+    created_at: entry.createdAt,
+  };
 }
 
-/**
- * Fetch all trading accounts for the current user (RLS scopes them), newest first.
- */
+function rowToEntry(row) {
+  return { ...row.data, id: row.id, accountId: row.account_id ?? row.data.accountId };
+}
+
+function historyToRow(item) {
+  // Calculator history uses `date` (ISO) as its timestamp.
+  return { id: item.id, data: item, created_at: item.date };
+}
+
+function rowToHistory(row) {
+  return { ...row.data, id: row.id };
+}
+
+// --- Trading accounts -------------------------------------------------------
+
 export async function getAccounts() {
   const supabase = getSupabaseClient();
-  return unwrap(
+  const rows = unwrap(
     await supabase
       .from(TABLES.TRADING_ACCOUNTS)
       .select("*")
       .order("created_at", { ascending: false }),
   );
+  return rows.map(rowToAccount);
 }
 
-// ---------------------------------------------------------------------------
-// Journal entries
-// ---------------------------------------------------------------------------
-
-/**
- * Insert a new journal entry. `entry` should use snake_case columns and include
- * account_id. user_id is filled in by Supabase from the session.
- */
-export async function createJournalEntry(entry) {
+// Insert or update a single account (keyed on id).
+export async function upsertAccount(account) {
   const supabase = getSupabaseClient();
-  return unwrap(
-    await supabase.from(TABLES.JOURNAL_ENTRIES).insert(entry).select().single(),
-  );
-}
-
-/**
- * Update an existing journal entry by id with a partial set of columns.
- */
-export async function updateJournalEntry(id, updates) {
-  const supabase = getSupabaseClient();
-  return unwrap(
+  const row = unwrap(
     await supabase
-      .from(TABLES.JOURNAL_ENTRIES)
-      .update(updates)
-      .eq("id", id)
+      .from(TABLES.TRADING_ACCOUNTS)
+      .upsert(accountToRow(account), { onConflict: "id" })
       .select()
       .single(),
   );
+  return rowToAccount(row);
 }
 
-/**
- * Delete a journal entry by id.
- */
+// Bulk upsert (used by recalculation persistence and migration).
+export async function upsertAccounts(accounts) {
+  if (!accounts.length) {
+    return [];
+  }
+
+  const supabase = getSupabaseClient();
+  const rows = unwrap(
+    await supabase
+      .from(TABLES.TRADING_ACCOUNTS)
+      .upsert(accounts.map(accountToRow), { onConflict: "id" })
+      .select(),
+  );
+  return rows.map(rowToAccount);
+}
+
+export async function deleteAccount(id) {
+  const supabase = getSupabaseClient();
+  // ON DELETE CASCADE removes the account's journal entries too.
+  return unwrap(await supabase.from(TABLES.TRADING_ACCOUNTS).delete().eq("id", id));
+}
+
+// Back-compat aliases for the originally specified API.
+export const createAccount = upsertAccount;
+export const updateAccount = upsertAccount;
+
+// --- Journal entries --------------------------------------------------------
+
+export async function getJournalEntries() {
+  const supabase = getSupabaseClient();
+  const rows = unwrap(
+    await supabase
+      .from(TABLES.JOURNAL_ENTRIES)
+      .select("*")
+      .order("created_at", { ascending: false }),
+  );
+  return rows.map(rowToEntry);
+}
+
+export async function upsertJournalEntry(entry) {
+  const supabase = getSupabaseClient();
+  const row = unwrap(
+    await supabase
+      .from(TABLES.JOURNAL_ENTRIES)
+      .upsert(entryToRow(entry), { onConflict: "id" })
+      .select()
+      .single(),
+  );
+  return rowToEntry(row);
+}
+
+export async function upsertJournalEntries(entries) {
+  if (!entries.length) {
+    return [];
+  }
+
+  const supabase = getSupabaseClient();
+  const rows = unwrap(
+    await supabase
+      .from(TABLES.JOURNAL_ENTRIES)
+      .upsert(entries.map(entryToRow), { onConflict: "id" })
+      .select(),
+  );
+  return rows.map(rowToEntry);
+}
+
 export async function deleteJournalEntry(id) {
   const supabase = getSupabaseClient();
   return unwrap(await supabase.from(TABLES.JOURNAL_ENTRIES).delete().eq("id", id));
 }
 
-/**
- * Fetch journal entries for the current user (RLS scopes them), newest first.
- * Pass an accountId to fetch only entries for a single account.
- */
-export async function getJournalEntries(accountId = null) {
-  const supabase = getSupabaseClient();
-  let query = supabase
-    .from(TABLES.JOURNAL_ENTRIES)
-    .select("*")
-    .order("created_at", { ascending: false });
+export const createJournalEntry = upsertJournalEntry;
+export const updateJournalEntry = upsertJournalEntry;
 
-  if (accountId) {
-    query = query.eq("account_id", accountId);
-  }
+// --- Calculator history -----------------------------------------------------
 
-  return unwrap(await query);
-}
-
-// ---------------------------------------------------------------------------
-// Calculator history
-// ---------------------------------------------------------------------------
-
-/**
- * Insert a new calculator history record. `entry` should use snake_case columns.
- * user_id is filled in by Supabase from the session.
- */
-export async function createCalculatorHistory(entry) {
-  const supabase = getSupabaseClient();
-  return unwrap(
-    await supabase.from(TABLES.CALCULATOR_HISTORY).insert(entry).select().single(),
-  );
-}
-
-/**
- * Fetch calculator history for the current user (RLS scopes it), newest first.
- */
 export async function getCalculatorHistory() {
   const supabase = getSupabaseClient();
-  return unwrap(
+  const rows = unwrap(
     await supabase
       .from(TABLES.CALCULATOR_HISTORY)
       .select("*")
       .order("created_at", { ascending: false }),
+  );
+  return rows.map(rowToHistory);
+}
+
+export async function createCalculatorHistory(item) {
+  const supabase = getSupabaseClient();
+  const row = unwrap(
+    await supabase
+      .from(TABLES.CALCULATOR_HISTORY)
+      .upsert(historyToRow(item), { onConflict: "id" })
+      .select()
+      .single(),
+  );
+  return rowToHistory(row);
+}
+
+export async function createCalculatorHistoryBulk(items) {
+  if (!items.length) {
+    return [];
+  }
+
+  const supabase = getSupabaseClient();
+  const rows = unwrap(
+    await supabase
+      .from(TABLES.CALCULATOR_HISTORY)
+      .upsert(items.map(historyToRow), { onConflict: "id" })
+      .select(),
+  );
+  return rows.map(rowToHistory);
+}
+
+export async function deleteCalculatorHistory(id) {
+  const supabase = getSupabaseClient();
+  return unwrap(await supabase.from(TABLES.CALCULATOR_HISTORY).delete().eq("id", id));
+}
+
+// Delete every calculator-history row for the current user (RLS scopes it).
+export async function clearCalculatorHistory() {
+  const supabase = getSupabaseClient();
+  return unwrap(
+    await supabase.from(TABLES.CALCULATOR_HISTORY).delete().not("id", "is", null),
   );
 }
