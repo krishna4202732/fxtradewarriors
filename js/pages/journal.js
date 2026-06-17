@@ -31,6 +31,7 @@ import {
   tradeDurationMinutes,
 } from "../sessions.js";
 import { exportJournalCsv, exportJournalPdf } from "../export.js";
+import { getDailyRuleReportsInRange } from "../database.js";
 import { initTheme } from "../theme.js";
 import {
   escapeHtml,
@@ -134,6 +135,9 @@ const elements = {
   exportMenu: document.querySelector("#exportMenu"),
   exportToggle: document.querySelector("#exportToggle"),
   exportOptions: document.querySelector("#exportOptions"),
+  exportFromDate: document.querySelector("#exportFromDate"),
+  exportToDate: document.querySelector("#exportToDate"),
+  exportIncludeReports: document.querySelector("#exportIncludeReports"),
   sessionStatusCard: document.querySelector("#sessionStatusCard"),
   sessionClock: document.querySelector("#sessionClock"),
   sessionName: document.querySelector("#sessionName"),
@@ -912,7 +916,7 @@ function toggleExportMenu() {
   elements.exportToggle.setAttribute("aria-expanded", String(willOpen));
 }
 
-function handleExportAction(event) {
+async function handleExportAction(event) {
   const option = event.target.closest("[data-export]");
 
   if (!option) {
@@ -927,13 +931,30 @@ function handleExportAction(event) {
     return;
   }
 
+  const fromDate = elements.exportFromDate ? elements.exportFromDate.value : "";
+  const toDate = elements.exportToDate ? elements.exportToDate.value : "";
+  const includeRuleReports = Boolean(elements.exportIncludeReports && elements.exportIncludeReports.checked);
+
+  let ruleReports = [];
+
+  if (includeRuleReports) {
+    try {
+      ruleReports = await getDailyRuleReportsInRange(fromDate, toDate);
+    } catch (error) {
+      console.error("Could not load rule reports for export:", error.message);
+      showToast("Could not load rule reports; exporting trades only.");
+    }
+  }
+
+  const options = { fromDate, toDate, includeRuleReports, ruleReports };
+
   if (option.dataset.export === "csv") {
-    exportJournalCsv(entries, activeUser);
+    exportJournalCsv(entries, activeUser, options);
     showToast("Journal exported as CSV.");
   }
 
   if (option.dataset.export === "pdf") {
-    exportJournalPdf(entries, activeUser);
+    exportJournalPdf(entries, activeUser, options);
     showToast("Preparing PDF export...");
   }
 

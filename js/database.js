@@ -240,6 +240,24 @@ export async function getDailyRuleReports() {
   return rows.map(rowToReport);
 }
 
+// Fetch reports within an inclusive YYYY-MM-DD date range (either bound optional),
+// used by the enhanced export. RLS scopes them to the current user.
+export async function getDailyRuleReportsInRange(fromDate, toDate) {
+  const supabase = getSupabaseClient();
+  let query = supabase.from(TABLES.DAILY_RULE_REPORTS).select("*");
+
+  if (fromDate) {
+    query = query.gte("report_date", fromDate);
+  }
+
+  if (toDate) {
+    query = query.lte("report_date", toDate);
+  }
+
+  const rows = unwrap(await query.order("report_date", { ascending: true }));
+  return rows.map(rowToReport);
+}
+
 // Upsert keyed on `<accountId>:<reportDate>` so saving the same day again
 // updates the existing report instead of creating a duplicate.
 export async function upsertDailyRuleReport(report) {

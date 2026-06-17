@@ -429,6 +429,18 @@
               <button id="exportToggle" class="button secondary" type="button" aria-haspopup="true"
                 aria-expanded="false" aria-controls="exportOptions">Export &#9662;</button>
               <div id="exportOptions" class="export-options is-hidden" role="menu" aria-label="Export journal">
+                <label class="field">
+                  <span>From Date</span>
+                  <input id="exportFromDate" type="date" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>To Date</span>
+                  <input id="exportToDate" type="date" autocomplete="off">
+                </label>
+                <label class="field export-toggle-field">
+                  <span>Include Rule Reports</span>
+                  <input id="exportIncludeReports" type="checkbox">
+                </label>
                 <button class="export-option" type="button" role="menuitem" data-export="pdf">Export as PDF</button>
                 <button class="export-option" type="button" role="menuitem" data-export="csv">Export as CSV</button>
               </div>
