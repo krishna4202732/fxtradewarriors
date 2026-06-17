@@ -7,7 +7,8 @@
 export function footerMarkup() {
   return `
     <footer class="site-footer">
-      <p>&copy; Krishna Upadhyay, Do not claim this as your own</p>
+      <p>FX Trade Warriors &middot; &copy; Krishna Upadhyay</p>
+      <p>Built for disciplined traders.</p>
     </footer>
   `;
 }
