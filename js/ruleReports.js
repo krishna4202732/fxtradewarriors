@@ -27,6 +27,9 @@ let ctx = null;
 let selectedAccountId = "";
 let reportsCache = [];
 let midnightTimer = null;
+// UI-only: which report cards have their custom-rules list expanded. Never
+// persisted — purely local display state, multiple cards may be open at once.
+const expandedReports = new Set();
 
 function getActiveUserId() {
   return ctx && typeof ctx.getActiveUserId === "function" ? ctx.getActiveUserId() : "";
@@ -170,15 +173,72 @@ function scoreLabel(report) {
   return `${report.passedRules}/${report.totalRules} (${report.overallScorePercent}%)`;
 }
 
+function getCustomRules(report) {
+  return Array.isArray(report.customRules) ? report.customRules : [];
+}
+
 function customRulesLabel(report) {
-  const list = Array.isArray(report.customRules) ? report.customRules : [];
+  const list = getCustomRules(report);
 
   if (list.length === 0) {
-    return "No custom rules";
+    return "No custom rules configured.";
   }
 
   const followed = list.filter((rule) => rule.status === true).length;
   return `${followed}/${list.length} followed`;
+}
+
+// Discipline label derived from the overall score percent. Returned as
+// { emoji, text } so the card can render an at-a-glance verdict next to the score.
+function disciplineLabel(report) {
+  const percent = report.overallScorePercent;
+
+  if (percent === null || percent === undefined) {
+    return null;
+  }
+
+  if (percent >= 90) {
+    return { emoji: "🟢", text: "Excellent" };
+  }
+
+  if (percent >= 70) {
+    return { emoji: "🟡", text: "Good" };
+  }
+
+  if (percent >= 40) {
+    return { emoji: "🟠", text: "Needs Improvement" };
+  }
+
+  return { emoji: "🔴", text: "Poor Discipline" };
+}
+
+// Custom rules ordered violated-first, then followed. Stable within each group.
+function orderedCustomRules(report) {
+  const list = getCustomRules(report);
+  const violated = list.filter((rule) => rule.status !== true);
+  const followed = list.filter((rule) => rule.status === true);
+  return [...violated, ...followed];
+}
+
+function customRulesExpansion(report) {
+  const list = getCustomRules(report);
+
+  if (list.length === 0) {
+    return "";
+  }
+
+  const items = orderedCustomRules(report)
+    .map((rule) => {
+      const followed = rule.status === true;
+      const mark = followed
+        ? '<span class="positive">✓</span>'
+        : '<span class="negative">✗</span>';
+      const title = rule.description ? `title="${escapeHtml(rule.description)}"` : "";
+      return `<li class="rule-report-custom-rule" ${title}>${mark} <span>${escapeHtml(rule.title)}</span></li>`;
+    })
+    .join("");
+
+  return `<ul class="rule-report-custom-list">${items}</ul>`;
 }
 
 function formatReportDate(dateKey) {
@@ -205,25 +265,66 @@ function renderReports() {
     return;
   }
 
-  elements.ruleReportList.innerHTML = reports
-    .map(
-      (report) => `
-        <article class="rule-report-item">
-          <div class="rule-report-head">
-            <strong>${escapeHtml(formatReportDate(report.reportDate))}</strong>
-            <span>${escapeHtml(report.accountName || "")}</span>
-            <span class="rule-report-score">${escapeHtml(scoreLabel(report))}</span>
-          </div>
-          <dl class="rule-report-grid">
-            <div><dt>Daily Risk</dt><dd>${resultBadge(report.dailyRisk)}</dd></div>
-            <div><dt>Risk / Trade</dt><dd>${resultBadge(report.riskPerTrade)}</dd></div>
-            <div><dt>Trades / Day</dt><dd>${resultBadge(report.tradesPerDay)}</dd></div>
-            <div><dt>Custom Rules</dt><dd>${escapeHtml(customRulesLabel(report))}</dd></div>
-          </dl>
-        </article>
-      `,
-    )
-    .join("");
+  elements.ruleReportList.innerHTML = reports.map(renderReportCard).join("");
+}
+
+function renderReportCard(report) {
+  const hasCustomRules = getCustomRules(report).length > 0;
+  const isExpanded = expandedReports.has(report.id);
+  const discipline = disciplineLabel(report);
+  const disciplineMarkup = discipline
+    ? `<span class="rule-report-discipline">${discipline.emoji} ${escapeHtml(discipline.text)}</span>`
+    : "";
+
+  // The Custom Rules cell becomes a toggle button only when there are rules to
+  // show. Empty state stays plain text ("No custom rules configured.").
+  const customCell = hasCustomRules
+    ? `<button class="rule-report-custom-toggle" type="button" data-report-toggle="${escapeHtml(report.id)}"
+        aria-expanded="${isExpanded ? "true" : "false"}">
+        <span>${escapeHtml(customRulesLabel(report))}</span>
+        <span class="rule-report-chevron" aria-hidden="true">${isExpanded ? "▼" : "▶"}</span>
+      </button>`
+    : `<span>${escapeHtml(customRulesLabel(report))}</span>`;
+
+  const expansionMarkup = hasCustomRules && isExpanded ? customRulesExpansion(report) : "";
+
+  return `
+    <article class="rule-report-item">
+      <div class="rule-report-head">
+        <strong>${escapeHtml(formatReportDate(report.reportDate))}</strong>
+        <span>${escapeHtml(report.accountName || "")}</span>
+        ${disciplineMarkup}
+        <span class="rule-report-score">${escapeHtml(scoreLabel(report))}</span>
+      </div>
+      <dl class="rule-report-grid">
+        <div><dt>Daily Risk</dt><dd>${resultBadge(report.dailyRisk)}</dd></div>
+        <div><dt>Risk / Trade</dt><dd>${resultBadge(report.riskPerTrade)}</dd></div>
+        <div><dt>Trades / Day</dt><dd>${resultBadge(report.tradesPerDay)}</dd></div>
+        <div class="rule-report-custom-cell"><dt>Custom Rules</dt><dd>${customCell}</dd></div>
+      </dl>
+      ${expansionMarkup}
+    </article>
+  `;
+}
+
+// Toggles a card's expand state (UI-only) and re-renders. Wired once via
+// delegation in setupRuleReports.
+function handleReportToggle(event) {
+  const button = event.target.closest("[data-report-toggle]");
+
+  if (!button) {
+    return;
+  }
+
+  const reportId = button.dataset.reportToggle;
+
+  if (expandedReports.has(reportId)) {
+    expandedReports.delete(reportId);
+  } else {
+    expandedReports.add(reportId);
+  }
+
+  renderReports();
 }
 
 function populateAccountOptions(accounts) {
@@ -305,6 +406,7 @@ export async function setupRuleReports(context) {
     renderReports();
   });
   elements.saveRuleReport.addEventListener("click", handleSaveReport);
+  elements.ruleReportList.addEventListener("click", handleReportToggle);
 
   try {
     reportsCache = await getDailyRuleReports();
