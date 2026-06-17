@@ -3903,3 +3903,85 @@ body:not(.is-app-locked) .pin-gate {
     max-height: 85vh;
   }
 }
+
+/* ===== Secondary tab navigation (Journal + Calculator) ===== */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-top: 18px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--secondary-bg);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  min-width: max-content;
+  padding: 0 18px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast);
+}
+
+.tab-button:hover {
+  color: var(--text);
+}
+
+.tab-button.is-active {
+  background: var(--card-bg);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-panel {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+  animation: tabFade var(--motion-med) ease both;
+}
+
+@keyframes tabFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Equal-height Position Setup / Trade Metrics row (calculator). */
+.setup-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(330px, 0.95fr);
+  align-items: stretch;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.setup-row > .panel,
+.setup-row > .results-column,
+.setup-row > .results-column > .panel {
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .setup-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tab-button {
+    flex: 0 0 auto;
+  }
+}

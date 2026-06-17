@@ -180,6 +180,16 @@
           </dl>
         </section>
 
+        <nav class="tab-bar full-span" data-tabs="journal" aria-label="Journal sections">
+          <button class="tab-button" type="button" role="tab" data-tab="journal"
+            data-tab-target="tabNewEntry">New Entry</button>
+          <button class="tab-button" type="button" role="tab" data-tab="journal"
+            data-tab-target="tabRuleBook">Rule Book</button>
+          <button class="tab-button" type="button" role="tab" data-tab="journal"
+            data-tab-target="tabJournalEntries">Journal Entries</button>
+        </nav>
+
+        <div id="tabNewEntry" class="tab-panel full-span" data-tab-panel="journal">
         <section class="panel journal-entry-panel full-span" aria-labelledby="newJournalTitle">
           <div class="panel-heading">
             <div>
@@ -349,7 +359,9 @@
             <button id="saveJournalEntry" class="button primary" type="submit">Save Journal Entry</button>
           </form>
         </section>
+        </div>
 
+        <div id="tabRuleBook" class="tab-panel full-span" data-tab-panel="journal">
         <section class="panel rulebook-panel full-span" aria-labelledby="ruleBookTitle">
           <div class="panel-heading">
             <div>
@@ -427,7 +439,9 @@
             <div id="ruleReportList" class="rule-report-list" aria-live="polite"></div>
           </div>
         </section>
+        </div>
 
+        <div id="tabJournalEntries" class="tab-panel full-span" data-tab-panel="journal">
         <section class="panel journal-dashboard full-span" aria-labelledby="journalDashboardTitle">
           <div class="panel-heading">
             <div>
@@ -472,6 +486,7 @@
           </div>
           <div id="journalDetailContent" class="journal-detail-content"></div>
         </section>
+        </div>
       </main>
 
       <div data-component="footer"></div>

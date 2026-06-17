@@ -63,6 +63,7 @@
       </header>
 
       <main class="main-layout">
+        <div class="setup-row full-span">
         <section class="panel calculator-panel" aria-labelledby="calculatorTitle">
           <div class="panel-heading">
             <div>
@@ -169,7 +170,18 @@
             </div>
           </section>
         </aside>
+        </div>
 
+        <nav class="tab-bar full-span" data-tabs="calc" aria-label="Calculator sections">
+          <button class="tab-button" type="button" role="tab" data-tab="calc"
+            data-tab-target="tabDistance">Distance Metrics</button>
+          <button class="tab-button" type="button" role="tab" data-tab="calc"
+            data-tab-target="tabSummary">Trade Summary</button>
+          <button class="tab-button" type="button" role="tab" data-tab="calc"
+            data-tab-target="tabSaved">Saved Calculations</button>
+        </nav>
+
+        <div id="tabDistance" class="tab-panel full-span" data-tab-panel="calc">
         <section class="panel results-panel full-span" aria-labelledby="pointsTitle">
           <div class="panel-heading">
             <div>
@@ -200,12 +212,14 @@
             </div>
           </dl>
         </section>
+        </div>
 
+        <div id="tabSummary" class="tab-panel full-span" data-tab-panel="calc">
         <section class="panel summary-panel full-span" aria-labelledby="summaryTitle">
           <div class="panel-heading">
             <div>
               <p class="section-kicker">Summary</p>
-              <h2 id="summaryTitle">Trade Card</h2>
+              <h2 id="summaryTitle">Trade Summary</h2>
             </div>
           </div>
 
@@ -304,98 +318,9 @@
             </div>
           </div>
         </section>
+        </div>
 
-        <section class="panel prop-panel full-span" aria-labelledby="propTitle">
-          <div class="panel-heading">
-            <div>
-              <p class="section-kicker">Prop Firm Mode</p>
-              <h2 id="propTitle">Drawdown Monitor</h2>
-            </div>
-          </div>
-
-          <div class="prop-layout">
-            <div class="prop-controls">
-              <div class="form-grid compact">
-                <label class="field">
-                  <span>Preset</span>
-                  <select id="propPreset" name="propPreset"></select>
-                </label>
-
-                <label class="field">
-                  <span>Current Daily Loss</span>
-                  <input id="currentDailyLoss" name="currentDailyLoss" type="number" min="0" step="0.01"
-                    inputmode="decimal" autocomplete="off">
-                </label>
-
-                <label class="field">
-                  <span>Current Overall Drawdown</span>
-                  <input id="currentOverallDrawdown" name="currentOverallDrawdown" type="number" min="0" step="0.01"
-                    inputmode="decimal" autocomplete="off">
-                </label>
-              </div>
-
-              <div id="customLimits" class="form-grid compact custom-limits is-hidden">
-                <label class="field">
-                  <span>Daily Drawdown %</span>
-                  <input id="customDailyPercent" name="customDailyPercent" type="number" min="0" step="0.1"
-                    inputmode="decimal" autocomplete="off">
-                </label>
-
-                <label class="field">
-                  <span>Maximum Drawdown %</span>
-                  <input id="customMaxPercent" name="customMaxPercent" type="number" min="0" step="0.1"
-                    inputmode="decimal" autocomplete="off">
-                </label>
-              </div>
-            </div>
-
-            <div class="drawdown-board">
-              <dl class="drawdown-values">
-                <div>
-                  <dt>Daily Drawdown Limit</dt>
-                  <dd id="dailyLimit">--</dd>
-                </div>
-                <div>
-                  <dt>Maximum Drawdown Limit</dt>
-                  <dd id="maxLimit">--</dd>
-                </div>
-                <div>
-                  <dt>Remaining Daily Drawdown</dt>
-                  <dd id="dailyRemaining">--</dd>
-                </div>
-                <div>
-                  <dt>Remaining Overall Drawdown</dt>
-                  <dd id="maxRemaining">--</dd>
-                </div>
-                <div>
-                  <dt>Current Risk Usage</dt>
-                  <dd id="riskUsage">--</dd>
-                </div>
-              </dl>
-
-              <div class="progress-stack">
-                <label>
-                  <span>Daily Usage</span>
-                  <progress id="dailyProgress" max="100" value="0"></progress>
-                </label>
-                <label>
-                  <span>Overall Usage</span>
-                  <progress id="maxProgress" max="100" value="0"></progress>
-                </label>
-                <label>
-                  <span>Trade Risk Usage</span>
-                  <progress id="riskUsageProgress" max="100" value="0"></progress>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div id="propWarningPanel" class="alert-panel warning-panel is-hidden" role="alert" aria-live="polite">
-            <strong>Warnings</strong>
-            <ul id="propWarningList"></ul>
-          </div>
-        </section>
-
+        <div id="tabSaved" class="tab-panel full-span" data-tab-panel="calc">
         <section class="panel history-panel full-span" aria-labelledby="historyTitle">
           <div class="panel-heading history-heading">
             <div>
@@ -413,6 +338,7 @@
             <div id="historyList" class="history-list" aria-live="polite"></div>
           </div>
         </section>
+        </div>
       </main>
 
       <div data-component="footer"></div>

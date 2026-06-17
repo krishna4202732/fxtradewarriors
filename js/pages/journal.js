@@ -50,6 +50,7 @@ import { requireAuth, initLogout } from "../router.js";
 import { mountSharedComponents } from "../components.js";
 import { setupRuleBook, refreshRuleBook } from "../rulebook.js";
 import { setupRuleReports, refreshRuleReports } from "../ruleReports.js";
+import { setupTabs } from "../tabs.js";
 
 const OUTCOME_LABELS = {
   tp: "TP Hit",
@@ -1520,6 +1521,7 @@ async function init() {
   resetJournalForm();
   updateAccountPhaseVisibility();
   attachEvents();
+  setupTabs("journal", { defaultTarget: "tabNewEntry" });
   setupRuleBook({ getActiveUserId });
   await setupRuleReports({ getActiveUserId });
   renderJournal();

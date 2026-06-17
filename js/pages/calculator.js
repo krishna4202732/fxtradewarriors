@@ -1,11 +1,10 @@
-// Calculator page controller. Carries the lot-size calculator, prop-firm
-// drawdown monitor, and saved-calculation history logic from the original SPA
-// app.js — unchanged behaviour, now scoped to its own page. Private page.
+// Calculator page controller. Carries the lot-size calculator and
+// saved-calculation history logic from the original SPA app.js — unchanged
+// behaviour, now scoped to its own page. Private page.
 
 import {
   DEFAULT_STATE,
   INSTRUMENTS,
-  PROP_FIRM_PRESETS,
   RISK_TYPE_OPTIONS,
   RISK_TYPES,
 } from "../config.js";
@@ -20,7 +19,6 @@ import {
   formatPrice,
   formatRatio,
 } from "../calculator.js";
-import { calculatePropFirmStatus } from "../propFirm.js";
 import {
   clearAllHistory,
   deleteTrade,
@@ -40,6 +38,7 @@ import {
 import { formatDateTime } from "../dom-utils.js";
 import { requireAuth, initLogout } from "../router.js";
 import { mountSharedComponents } from "../components.js";
+import { setupTabs } from "../tabs.js";
 
 const ADMIN_SAVE_PIN = "7243";
 
@@ -87,22 +86,6 @@ const elements = {
   summaryRiskRewardBar: document.querySelector("#summaryRiskRewardBar"),
   copySummary: document.querySelector("#copySummary"),
   saveCalculation: document.querySelector("#saveCalculation"),
-  propPreset: document.querySelector("#propPreset"),
-  customLimits: document.querySelector("#customLimits"),
-  currentDailyLoss: document.querySelector("#currentDailyLoss"),
-  currentOverallDrawdown: document.querySelector("#currentOverallDrawdown"),
-  customDailyPercent: document.querySelector("#customDailyPercent"),
-  customMaxPercent: document.querySelector("#customMaxPercent"),
-  dailyLimit: document.querySelector("#dailyLimit"),
-  maxLimit: document.querySelector("#maxLimit"),
-  dailyRemaining: document.querySelector("#dailyRemaining"),
-  maxRemaining: document.querySelector("#maxRemaining"),
-  riskUsage: document.querySelector("#riskUsage"),
-  dailyProgress: document.querySelector("#dailyProgress"),
-  maxProgress: document.querySelector("#maxProgress"),
-  riskUsageProgress: document.querySelector("#riskUsageProgress"),
-  propWarningPanel: document.querySelector("#propWarningPanel"),
-  propWarningList: document.querySelector("#propWarningList"),
   toggleHistory: document.querySelector("#toggleHistory"),
   clearHistory: document.querySelector("#clearHistory"),
   historyPanelBody: document.querySelector("#historyPanelBody"),
@@ -152,9 +135,6 @@ function populateSelects() {
     .join("");
 
   elements.instrument.innerHTML = instrumentOptions;
-  elements.propPreset.innerHTML = Object.entries(PROP_FIRM_PRESETS)
-    .map(([key, preset]) => `<option value="${key}">${preset.label}</option>`)
-    .join("");
 }
 
 function applyDefaultValues() {
@@ -165,11 +145,6 @@ function applyDefaultValues() {
   elements.entryPrice.value = DEFAULT_STATE.entryPrice;
   elements.stopLoss.value = DEFAULT_STATE.stopLoss;
   elements.takeProfit.value = DEFAULT_STATE.takeProfit;
-  elements.propPreset.value = DEFAULT_STATE.propPreset;
-  elements.currentDailyLoss.value = DEFAULT_STATE.currentDailyLoss;
-  elements.currentOverallDrawdown.value = DEFAULT_STATE.currentOverallDrawdown;
-  elements.customDailyPercent.value = DEFAULT_STATE.customDailyPercent;
-  elements.customMaxPercent.value = DEFAULT_STATE.customMaxPercent;
 }
 
 function readCalculatorInput() {
@@ -181,18 +156,6 @@ function readCalculatorInput() {
     entryPrice: elements.entryPrice.value,
     stopLoss: elements.stopLoss.value,
     takeProfit: elements.takeProfit.value,
-  };
-}
-
-function readPropInput(accountBalance, riskAmount) {
-  return {
-    accountBalance,
-    riskAmount,
-    propPreset: elements.propPreset.value,
-    currentDailyLoss: elements.currentDailyLoss.value,
-    currentOverallDrawdown: elements.currentOverallDrawdown.value,
-    customDailyPercent: elements.customDailyPercent.value,
-    customMaxPercent: elements.customMaxPercent.value,
   };
 }
 
@@ -357,29 +320,6 @@ function renderCalculation(calculation) {
   );
 }
 
-function renderPropFirm(accountBalance, riskAmount) {
-  const status = calculatePropFirmStatus(
-    readPropInput(accountBalance, riskAmount),
-  );
-  elements.customLimits.classList.toggle(
-    "is-hidden",
-    elements.propPreset.value !== "custom",
-  );
-  setText(elements.dailyLimit, formatCurrency(status.dailyLimit));
-  setText(elements.maxLimit, formatCurrency(status.maxLimit));
-  setText(elements.dailyRemaining, formatCurrency(status.dailyRemaining));
-  setText(elements.maxRemaining, formatCurrency(status.maxRemaining));
-  setText(elements.riskUsage, formatPercent(status.riskUsagePercent));
-  elements.dailyProgress.value = clampPercent(status.dailyUsagePercent);
-  elements.maxProgress.value = clampPercent(status.maxUsagePercent);
-  elements.riskUsageProgress.value = clampPercent(status.riskUsagePercent);
-  renderWarnings(
-    elements.propWarningPanel,
-    elements.propWarningList,
-    status.warnings,
-  );
-}
-
 function updateApp() {
   updateRiskMeta();
   const validation = validateCalculationInput(readCalculatorInput());
@@ -388,14 +328,12 @@ function updateApp() {
 
   if (!validation.isValid) {
     renderEmptyCalculation();
-    renderPropFirm(Number(validation.values.accountBalance) || 0, 0);
     return;
   }
 
   const calculation = calculateTrade(validation.values);
   writeNormalizedPriceValues(validation.values);
   renderCalculation(calculation);
-  renderPropFirm(calculation.accountBalance, calculation.potentialLoss);
 }
 
 function buildSummaryText(calculation) {
@@ -550,11 +488,6 @@ function attachEvents() {
     elements.entryPrice,
     elements.stopLoss,
     elements.takeProfit,
-    elements.propPreset,
-    elements.currentDailyLoss,
-    elements.currentOverallDrawdown,
-    elements.customDailyPercent,
-    elements.customMaxPercent,
   ];
 
   liveInputs.forEach((element) => {
@@ -594,6 +527,7 @@ async function init() {
   populateSelects();
   applyDefaultValues();
   attachEvents();
+  setupTabs("calc", { defaultTarget: "tabDistance" });
   updateApp();
   renderHistory();
   setupScrollReveal();
