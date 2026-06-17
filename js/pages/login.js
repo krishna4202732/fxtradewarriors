@@ -50,59 +50,91 @@ function setBusy(isBusy) {
   elements.googleLogin.disabled = isBusy;
 }
 
-// Applies the visual + behavioural state for a given mode. Visibility uses the
-// native `hidden` attribute so no CSS is touched.
-//   login    — email + password + all secondary actions
-//   signup   — adds display name; submit creates an account
-//   reset    — forgot-password: email only, "Send Reset Link" + Back To Login
-//   recovery — set a new password after following a reset link
+// Single source of truth for what every control shows in each UI state.
+// Mutually exclusive — exactly one state is active. `recovery` is the special
+// post-reset-link flow (set a new password) and is driven by the URL, not a
+// user toggle, so it keeps its own minimal entry.
+//
+//   login    — Email, Password, Login, Google, Forgot Password, Create Account, Back To Overview
+//   signup   — Display Name, Email, Password, Create Account, Google, Back To Login, Back To Overview
+//   forgot   — Email, Send Reset Link, Back To Login, Back To Overview
+//   recovery — Password (new), Update Password, Back To Login, Back To Overview
+const VIEWS = {
+  login: {
+    displayName: false,
+    email: true,
+    password: true,
+    google: true,
+    forgot: true,
+    toggleMode: true,
+    backToLogin: false,
+    backToOverview: true,
+    subtitle: "Sign in to your trading dashboard.",
+    submit: "Login",
+    passwordAutocomplete: "current-password",
+  },
+  signup: {
+    displayName: true,
+    email: true,
+    password: true,
+    google: true,
+    forgot: false,
+    toggleMode: false,
+    backToLogin: true,
+    backToOverview: true,
+    subtitle: "Create your trading account.",
+    submit: "Create Account",
+    passwordAutocomplete: "new-password",
+  },
+  forgot: {
+    displayName: false,
+    email: true,
+    password: false,
+    google: false,
+    forgot: false,
+    toggleMode: false,
+    backToLogin: true,
+    backToOverview: true,
+    subtitle: "Reset Your Password — enter your email address and we'll send you a reset link.",
+    submit: "Send Reset Link",
+    passwordAutocomplete: "current-password",
+  },
+  recovery: {
+    displayName: false,
+    email: false,
+    password: true,
+    google: false,
+    forgot: false,
+    toggleMode: false,
+    backToLogin: true,
+    backToOverview: true,
+    subtitle: "Choose a new password.",
+    submit: "Update Password",
+    passwordAutocomplete: "new-password",
+  },
+};
+
+// Applies an explicit, mutually-exclusive UI state. Visibility uses the native
+// `hidden` attribute so no CSS is touched and no duplicate components linger.
 function setMode(nextMode) {
   mode = nextMode;
   setError("");
 
-  const isSignup = mode === "signup";
-  const isRecovery = mode === "recovery";
-  const isReset = mode === "reset";
+  const view = VIEWS[mode] || VIEWS.login;
 
-  // Display Name belongs to signup only — never shown for login/reset/recovery.
-  elements.displayNameField.hidden = !isSignup;
-  // Email is hidden only while choosing a new password (recovery).
-  emailField().hidden = isRecovery;
-  // Password is hidden while requesting a reset link.
-  elements.passwordField.hidden = isReset;
-  // Secondary actions only make sense in normal login/signup.
-  elements.forgotPassword.hidden = isRecovery || isReset;
-  elements.toggleMode.hidden = isRecovery || isReset;
-  elements.googleLogin.hidden = isRecovery || isReset;
-  elements.backToLogin.hidden = !isReset;
-  elements.backToOverview.hidden = isReset || isRecovery;
+  elements.displayNameField.hidden = !view.displayName;
+  emailField().hidden = !view.email;
+  elements.passwordField.hidden = !view.password;
+  elements.googleLogin.hidden = !view.google;
+  elements.forgotPassword.hidden = !view.forgot;
+  elements.toggleMode.hidden = !view.toggleMode;
+  elements.backToLogin.hidden = !view.backToLogin;
+  elements.backToOverview.hidden = !view.backToOverview;
 
-  if (isRecovery) {
-    elements.authSubtitle.textContent = "Choose a new password.";
-    elements.authSubmit.textContent = "Update Password";
-    elements.loginPassword.setAttribute("autocomplete", "new-password");
-    return;
-  }
-
-  if (isReset) {
-    elements.authSubtitle.textContent =
-      "Enter your email address and we'll send you a reset link.";
-    elements.authSubmit.textContent = "Send Reset Link";
-    return;
-  }
-
-  if (isSignup) {
-    elements.authSubtitle.textContent = "Create your trading account.";
-    elements.authSubmit.textContent = "Sign Up";
-    elements.toggleMode.textContent = "Back to login";
-    elements.loginPassword.setAttribute("autocomplete", "new-password");
-    return;
-  }
-
-  elements.authSubtitle.textContent = "Sign in to your trading dashboard.";
-  elements.authSubmit.textContent = "Login";
+  elements.authSubtitle.textContent = view.subtitle;
+  elements.authSubmit.textContent = view.submit;
   elements.toggleMode.textContent = "Create an account";
-  elements.loginPassword.setAttribute("autocomplete", "current-password");
+  elements.loginPassword.setAttribute("autocomplete", view.passwordAutocomplete);
 }
 
 // Recovery links arrive as `…/login.html#access_token=…&type=recovery`. Detect
@@ -158,7 +190,7 @@ async function handleSubmit(event) {
   try {
     if (mode === "recovery") {
       await handleRecovery();
-    } else if (mode === "reset") {
+    } else if (mode === "forgot") {
       await handleSendResetLink();
     } else if (mode === "signup") {
       await handleSignup();
@@ -186,9 +218,9 @@ async function handleGoogle() {
   }
 }
 
-// "Forgot password?" switches into reset mode (password hidden, email kept).
+// "Forgot password?" switches into forgot-password mode (password hidden).
 function handleForgotPassword() {
-  setMode("reset");
+  setMode("forgot");
   elements.loginEmail.focus();
 }
 
