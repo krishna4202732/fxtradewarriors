@@ -90,6 +90,7 @@ const elements = {
   journalTakeProfit: document.querySelector("#journalTakeProfit"),
   journalLotSize: document.querySelector("#journalLotSize"),
   journalCommissionPerLot: document.querySelector("#journalCommissionPerLot"),
+  journalSwapPaid: document.querySelector("#journalSwapPaid"),
   journalEntryTime: document.querySelector("#journalEntryTime"),
   journalExitTime: document.querySelector("#journalExitTime"),
   journalOutcome: document.querySelector("#journalOutcome"),
@@ -100,6 +101,8 @@ const elements = {
   journalRiskReward: document.querySelector("#journalRiskReward"),
   journalFinalPnl: document.querySelector("#journalFinalPnl"),
   journalCommission: document.querySelector("#journalCommission"),
+  journalSwap: document.querySelector("#journalSwap"),
+  journalNetResult: document.querySelector("#journalNetResult"),
   journalBalanceAfter: document.querySelector("#journalBalanceAfter"),
   journalDuration: document.querySelector("#journalDuration"),
   journalEntrySession: document.querySelector("#journalEntrySession"),
@@ -123,6 +126,7 @@ const elements = {
   statBestTrade: document.querySelector("#statBestTrade"),
   statWorstTrade: document.querySelector("#statWorstTrade"),
   statTotalCommission: document.querySelector("#statTotalCommission"),
+  statTotalSwap: document.querySelector("#statTotalSwap"),
   journalEmpty: document.querySelector("#journalEmpty"),
   journalList: document.querySelector("#journalList"),
   exportMenu: document.querySelector("#exportMenu"),
@@ -180,6 +184,7 @@ function resetJournalForm() {
   elements.journalTakeProfit.value = DEFAULT_STATE.takeProfit;
   elements.journalLotSize.value = "0.01";
   elements.journalCommissionPerLot.value = "5";
+  elements.journalSwapPaid.value = "0";
   elements.journalOutcome.value = "tp";
   elements.journalEntryTime.value = getIstDateTimeLocalValue();
   elements.journalExitTime.value = getIstDateTimeLocalValue();
@@ -348,6 +353,7 @@ function readJournalInput() {
     takeProfit: parseNumber(elements.journalTakeProfit.value),
     lotSize: parseNumber(elements.journalLotSize.value),
     commissionPerLot: parseNumber(elements.journalCommissionPerLot.value),
+    swapPaid: parseNumber(elements.journalSwapPaid.value),
     entryTime: elements.journalEntryTime.value,
     exitTime: elements.journalExitTime.value,
     outcome: elements.journalOutcome.value,
@@ -461,6 +467,9 @@ function calculateJournalPreview(input) {
     Number.isFinite(input.lotSize) && Number.isFinite(input.commissionPerLot)
       ? input.lotSize * input.commissionPerLot
       : null;
+  // Swap is optional and may be negative (broker-paid). Empty -> 0.
+  const swapPaid = Number.isFinite(input.swapPaid) ? input.swapPaid : 0;
+  const commissionCost = Number.isFinite(commissionPaid) ? commissionPaid : 0;
 
   if (!calculation) {
     return {
@@ -469,6 +478,8 @@ function calculateJournalPreview(input) {
       calculation: null,
       finalTradePnL: null,
       commissionPaid,
+      swapPaid,
+      netTradeResult: null,
       accountBalanceAfter: null,
     };
   }
@@ -493,15 +504,21 @@ function calculateJournalPreview(input) {
     });
   }
 
+  const netTradeResult = Number.isFinite(finalTradePnL)
+    ? finalTradePnL - commissionCost - swapPaid
+    : null;
+
   return {
     input,
     validation,
     calculation,
     finalTradePnL,
     commissionPaid,
+    swapPaid,
+    netTradeResult,
     accountBalanceAfter:
       input.account && Number.isFinite(finalTradePnL)
-        ? input.account.currentBalance + finalTradePnL - (Number.isFinite(commissionPaid) ? commissionPaid : 0)
+        ? input.account.currentBalance + finalTradePnL - commissionCost - swapPaid
         : null,
   };
 }
@@ -522,6 +539,16 @@ function renderJournalPreview(preview) {
     Number.isFinite(preview.commissionPaid) ? formatSignedCurrency(-preview.commissionPaid) : "--",
   );
   setSignedClass(elements.journalCommission, Number.isFinite(preview.commissionPaid) ? -preview.commissionPaid : 0);
+  setText(
+    elements.journalSwap,
+    Number.isFinite(preview.swapPaid) ? formatSignedCurrency(-preview.swapPaid) : "--",
+  );
+  setSignedClass(elements.journalSwap, Number.isFinite(preview.swapPaid) ? -preview.swapPaid : 0);
+  setText(
+    elements.journalNetResult,
+    Number.isFinite(preview.netTradeResult) ? formatSignedCurrency(preview.netTradeResult) : "--",
+  );
+  setSignedClass(elements.journalNetResult, Number.isFinite(preview.netTradeResult) ? preview.netTradeResult : 0);
 
   if (!preview.calculation) {
     [
@@ -619,9 +646,12 @@ function renderAccounts(accounts, entries = []) {
   }
 
   const commissionByAccount = new Map();
+  const swapByAccount = new Map();
   entries.forEach((entry) => {
-    const current = commissionByAccount.get(entry.accountId) || 0;
-    commissionByAccount.set(entry.accountId, current + (Number(entry.commissionPaid) || 0));
+    const currentCommission = commissionByAccount.get(entry.accountId) || 0;
+    commissionByAccount.set(entry.accountId, currentCommission + (Number(entry.commissionPaid) || 0));
+    const currentSwap = swapByAccount.get(entry.accountId) || 0;
+    swapByAccount.set(entry.accountId, currentSwap + (Number(entry.swapPaid) || 0));
   });
 
   elements.accountsList.innerHTML = accounts
@@ -667,6 +697,10 @@ function renderAccounts(accounts, entries = []) {
                 <div>
                   <span>Commission Paid</span>
                   <strong>${formatCurrency(commissionByAccount.get(account.id) || 0)}</strong>
+                </div>
+                <div>
+                  <span>Swap Paid</span>
+                  <strong>${formatSignedCurrency(swapByAccount.get(account.id) || 0)}</strong>
                 </div>
                 ${
                   account.accountType === "prop"
@@ -714,10 +748,15 @@ function calculateStats(entries) {
     (sum, entry) => sum + (Number(entry.commissionPaid) || 0),
     0,
   );
+  const totalSwap = entries.reduce(
+    (sum, entry) => sum + (Number(entry.swapPaid) || 0),
+    0,
+  );
 
   return {
     totalTrades,
     totalCommission,
+    totalSwap,
     winningTrades,
     losingTrades,
     winRate: totalTrades > 0 ? (winningTrades / totalTrades) * 100 : null,
@@ -747,6 +786,7 @@ function renderStats(entries) {
   setText(elements.statBestTrade, stats.totalTrades === 0 ? "--" : formatSignedCurrency(stats.bestTrade));
   setText(elements.statWorstTrade, stats.totalTrades === 0 ? "--" : formatSignedCurrency(stats.worstTrade));
   setText(elements.statTotalCommission, formatCurrency(stats.totalCommission));
+  setText(elements.statTotalSwap, formatSignedCurrency(stats.totalSwap));
   setSignedClass(elements.statNetPnl, stats.netPnl);
   setSignedClass(elements.statBestTrade, stats.bestTrade);
   setSignedClass(elements.statWorstTrade, stats.worstTrade);
@@ -1038,9 +1078,18 @@ async function handleJournalSubmit(event) {
     finalTradePnL: roundMoney(preview.finalTradePnL),
     commissionPerLot: roundMoney(input.commissionPerLot),
     commissionPaid: roundMoney(input.lotSize * input.commissionPerLot),
+    swapPaid: roundMoney(Number.isFinite(input.swapPaid) ? input.swapPaid : 0),
+    netTradeResult: roundMoney(
+      preview.finalTradePnL -
+        input.lotSize * input.commissionPerLot -
+        (Number.isFinite(input.swapPaid) ? input.swapPaid : 0),
+    ),
     accountBalanceBefore: roundMoney(input.account.currentBalance),
     accountBalanceAfter: roundMoney(
-      input.account.currentBalance + preview.finalTradePnL - input.lotSize * input.commissionPerLot,
+      input.account.currentBalance +
+        preview.finalTradePnL -
+        input.lotSize * input.commissionPerLot -
+        (Number.isFinite(input.swapPaid) ? input.swapPaid : 0),
     ),
     entryLogic: input.entryLogic,
     exitLogic: input.exitLogic,
@@ -1059,6 +1108,18 @@ async function handleJournalSubmit(event) {
 function hideJournalDetail() {
   elements.journalDetailPanel.classList.add("is-hidden");
   elements.journalDetailContent.innerHTML = "";
+}
+
+function getEntryNetResult(entry) {
+  if (Number.isFinite(Number(entry.netTradeResult))) {
+    return Number(entry.netTradeResult);
+  }
+
+  return (
+    (Number(entry.finalTradePnL) || 0) -
+    (Number(entry.commissionPaid) || 0) -
+    (Number(entry.swapPaid) || 0)
+  );
 }
 
 function renderJournalDetail(entry) {
@@ -1085,7 +1146,9 @@ function renderJournalDetail(entry) {
     ["Risk Reward", formatRatio(Number(entry.riskReward) || 0)],
     ["Final Trade PnL", formatSignedCurrency(Number(entry.finalTradePnL) || 0)],
     ["Commission Per Lot", formatCurrency(Number(entry.commissionPerLot) || 0)],
-    ["Commission Paid", formatSignedCurrency(-(Number(entry.commissionPaid) || 0))],
+    ["Commission Paid", formatCurrency(Number(entry.commissionPaid) || 0)],
+    ["Swap Paid", formatSignedCurrency(Number(entry.swapPaid) || 0)],
+    ["Net Trade Result", formatSignedCurrency(getEntryNetResult(entry))],
     ["Balance Before", formatCurrency(entry.accountBalanceBefore)],
     ["Balance After", formatCurrency(entry.accountBalanceAfter)],
   ];

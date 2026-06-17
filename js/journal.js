@@ -370,11 +370,13 @@ export function recalculateUserJournal(userId) {
     }
 
     const accountBalanceBefore = roundMoney(account.currentBalance);
-    // Broker commission is a cost: deduct it from the running balance alongside
-    // the trade PnL. Missing on older entries -> 0, so they are unaffected.
+    // Broker commission and swap are costs: deduct both from the running balance
+    // alongside the trade PnL. Missing on older entries -> 0, so they are
+    // unaffected. (Swap may be negative when a broker pays positive swap.)
     const commissionPaid = numberOrZero(entry.commissionPaid);
+    const swapPaid = numberOrZero(entry.swapPaid);
     const accountBalanceAfter = roundMoney(
-      accountBalanceBefore + numberOrZero(entry.finalTradePnL) - commissionPaid,
+      accountBalanceBefore + numberOrZero(entry.finalTradePnL) - commissionPaid - swapPaid,
     );
     account.currentBalance = accountBalanceAfter;
 

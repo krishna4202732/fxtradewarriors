@@ -5,6 +5,7 @@
 --
 -- Every table is locked down so an authenticated user can only ever read or
 -- write their own rows. `auth.uid()` is the id of the logged-in user.
+
 --   - profiles            → matched on  id        = auth.uid()
 --   - all other tables    → matched on  user_id   = auth.uid()
 -- With these policies enabled the public anon key is safe to ship in the

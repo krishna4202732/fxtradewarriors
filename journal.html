@@ -160,6 +160,10 @@
               <dt>Total Commission Paid</dt>
               <dd id="statTotalCommission">--</dd>
             </div>
+            <div>
+              <dt>Total Swap Paid</dt>
+              <dd id="statTotalSwap">--</dd>
+            </div>
           </dl>
         </section>
 
@@ -217,6 +221,12 @@
               </label>
 
               <label class="field">
+                <span>Swap Paid ($)</span>
+                <input id="journalSwapPaid" name="journalSwapPaid" type="number" step="0.01"
+                  inputmode="decimal" autocomplete="off" value="0">
+              </label>
+
+              <label class="field">
                 <span>Time Of Entry (IST)</span>
                 <input id="journalEntryTime" name="journalEntryTime" type="datetime-local" required>
               </label>
@@ -263,6 +273,14 @@
                 <div>
                   <dt>Commission</dt>
                   <dd id="journalCommission">--</dd>
+                </div>
+                <div>
+                  <dt>Swap</dt>
+                  <dd id="journalSwap">--</dd>
+                </div>
+                <div>
+                  <dt>Net Trade Result</dt>
+                  <dd id="journalNetResult">--</dd>
                 </div>
                 <div>
                   <dt>Balance After Trade</dt>

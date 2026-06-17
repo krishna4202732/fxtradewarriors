@@ -83,6 +83,20 @@ function signedCurrency(value) {
   return formatCurrency(0);
 }
 
+// Net trade result = PnL - commission - swap. Uses the stored value when present,
+// otherwise derives it so older entries (no stored field) still export correctly.
+function netTradeResult(entry) {
+  if (Number.isFinite(Number(entry.netTradeResult))) {
+    return Number(entry.netTradeResult);
+  }
+
+  return (
+    (Number(entry.finalTradePnL) || 0) -
+    (Number(entry.commissionPaid) || 0) -
+    (Number(entry.swapPaid) || 0)
+  );
+}
+
 function combineNotes(entry) {
   return [
     entry.entryLogic ? `Entry: ${entry.entryLogic}` : "",
@@ -141,6 +155,9 @@ const CSV_COLUMNS = [
   ["Potential Profit", (entry) => formatCurrency(Number(entry.potentialProfit) || 0)],
   ["Risk Reward", (entry) => formatRatio(Number(entry.riskReward) || 0)],
   ["Final PnL", (entry) => signedCurrency(entry.finalTradePnL)],
+  ["Commission Paid", (entry) => formatCurrency(Number(entry.commissionPaid) || 0)],
+  ["Swap Paid", (entry) => signedCurrency(entry.swapPaid)],
+  ["Net Trade Result", (entry) => signedCurrency(netTradeResult(entry))],
   ["Balance Before", (entry) => formatCurrency(Number(entry.accountBalanceBefore) || 0)],
   ["Balance After", (entry) => formatCurrency(Number(entry.accountBalanceAfter) || 0)],
   ["Entry Logic", (entry) => entry.entryLogic || ""],
@@ -217,6 +234,9 @@ const PDF_FIELDS = [
   ["Potential Profit", (entry) => formatCurrency(Number(entry.potentialProfit) || 0)],
   ["Risk Reward", (entry) => formatRatio(Number(entry.riskReward) || 0)],
   ["Profit/Loss", (entry) => signedCurrency(entry.finalTradePnL)],
+  ["Commission", (entry) => formatCurrency(Number(entry.commissionPaid) || 0)],
+  ["Swap", (entry) => signedCurrency(entry.swapPaid)],
+  ["Net Result", (entry) => signedCurrency(netTradeResult(entry))],
   ["Balance Before", (entry) => formatCurrency(Number(entry.accountBalanceBefore) || 0)],
   ["Balance After", (entry) => formatCurrency(Number(entry.accountBalanceAfter) || 0)],
   ["Notes", (entry) => combineNotes(entry) || "--"],
