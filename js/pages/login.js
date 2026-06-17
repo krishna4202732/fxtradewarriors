@@ -29,6 +29,9 @@ const elements = {
   googleLogin: document.querySelector("#googleLogin"),
   forgotPassword: document.querySelector("#forgotPassword"),
   toggleMode: document.querySelector("#toggleMode"),
+  backToLogin: document.querySelector("#backToLogin"),
+  backToOverview: document.querySelector("#backToOverview"),
+  passwordField: document.querySelector("#loginPassword").closest(".field"),
   loginError: document.querySelector("#loginError"),
 };
 
@@ -49,23 +52,42 @@ function setBusy(isBusy) {
 
 // Applies the visual + behavioural state for a given mode. Visibility uses the
 // native `hidden` attribute so no CSS is touched.
+//   login    — email + password + all secondary actions
+//   signup   — adds display name; submit creates an account
+//   reset    — forgot-password: email only, "Send Reset Link" + Back To Login
+//   recovery — set a new password after following a reset link
 function setMode(nextMode) {
   mode = nextMode;
   setError("");
 
   const isSignup = mode === "signup";
   const isRecovery = mode === "recovery";
+  const isReset = mode === "reset";
 
+  // Display Name belongs to signup only — never shown for login/reset/recovery.
   elements.displayNameField.hidden = !isSignup;
+  // Email is hidden only while choosing a new password (recovery).
   emailField().hidden = isRecovery;
-  elements.forgotPassword.hidden = isRecovery;
-  elements.toggleMode.hidden = isRecovery;
-  elements.googleLogin.hidden = isRecovery;
+  // Password is hidden while requesting a reset link.
+  elements.passwordField.hidden = isReset;
+  // Secondary actions only make sense in normal login/signup.
+  elements.forgotPassword.hidden = isRecovery || isReset;
+  elements.toggleMode.hidden = isRecovery || isReset;
+  elements.googleLogin.hidden = isRecovery || isReset;
+  elements.backToLogin.hidden = !isReset;
+  elements.backToOverview.hidden = isReset || isRecovery;
 
   if (isRecovery) {
     elements.authSubtitle.textContent = "Choose a new password.";
     elements.authSubmit.textContent = "Update Password";
     elements.loginPassword.setAttribute("autocomplete", "new-password");
+    return;
+  }
+
+  if (isReset) {
+    elements.authSubtitle.textContent =
+      "Enter your email address and we'll send you a reset link.";
+    elements.authSubmit.textContent = "Send Reset Link";
     return;
   }
 
@@ -136,6 +158,8 @@ async function handleSubmit(event) {
   try {
     if (mode === "recovery") {
       await handleRecovery();
+    } else if (mode === "reset") {
+      await handleSendResetLink();
     } else if (mode === "signup") {
       await handleSignup();
     } else {
@@ -162,23 +186,25 @@ async function handleGoogle() {
   }
 }
 
-async function handleForgotPassword() {
+// "Forgot password?" switches into reset mode (password hidden, email kept).
+function handleForgotPassword() {
+  setMode("reset");
+  elements.loginEmail.focus();
+}
+
+// Submit in reset mode: send the reset link, then return to login.
+async function handleSendResetLink() {
   const email = elements.loginEmail.value.trim();
 
   if (!email) {
-    setError("Enter your email above, then tap Forgot password.");
+    setError("Enter your email address to receive a reset link.");
     elements.loginEmail.focus();
     return;
   }
 
-  setError("");
-
-  try {
-    await sendPasswordReset(email);
-    showToast("Password reset link sent. Check your email.");
-  } catch (error) {
-    setError(error.message || "Could not send the reset email.");
-  }
+  await sendPasswordReset(email);
+  showToast("Password reset link sent. Check your email.");
+  setMode("login");
 }
 
 function handleToggleMode() {
@@ -190,6 +216,7 @@ function attachEvents() {
   elements.googleLogin.addEventListener("click", handleGoogle);
   elements.forgotPassword.addEventListener("click", handleForgotPassword);
   elements.toggleMode.addEventListener("click", handleToggleMode);
+  elements.backToLogin.addEventListener("click", () => setMode("login"));
 
   // Backup: Supabase also emits this event once the recovery token is parsed.
   onAuthStateChange((event) => {

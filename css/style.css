@@ -3985,3 +3985,63 @@ body:not(.is-app-locked) .pin-gate {
     flex: 0 0 auto;
   }
 }
+
+/* ===== Rule Book header overflow + responsiveness ===== */
+.rulebook-panel > .panel-heading {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rulebook-panel > .panel-heading > div {
+  min-width: 0;
+}
+
+.rulebook-panel > .panel-heading > div h2 {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Toggle in the header: allow it to shrink and wrap its label rather than
+   pushing past the card edge. */
+.rulebook-enable {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.toggle-switch-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Audit: nothing in the rule book leaves its card. */
+.rulebook-panel h3,
+.rulebook-panel .field span,
+.rulebook-panel .status-pill,
+.rulebook-panel .custom-rule-card strong,
+.rulebook-panel .custom-rule-card p,
+.rulebook-panel .toggle-switch-label,
+.rulebook-panel .rule-status-info strong,
+.rulebook-panel .rule-status-info span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.rulebook-panel .rule-status-row {
+  flex-wrap: wrap;
+}
+
+/* Mobile: stack the toggle below the title; never force one row. */
+@media (max-width: 620px) {
+  .rulebook-panel > .panel-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .rulebook-enable {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

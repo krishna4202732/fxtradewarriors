@@ -453,6 +453,13 @@
               <button id="exportToggle" class="button secondary" type="button" aria-haspopup="true"
                 aria-expanded="false" aria-controls="exportOptions">Export &#9662;</button>
               <div id="exportOptions" class="export-options is-hidden" role="menu" aria-label="Export journal">
+                <p class="export-title">Export Journal</p>
+                <label class="field">
+                  <span>Account</span>
+                  <select id="exportAccount">
+                    <option value="">All Accounts</option>
+                  </select>
+                </label>
                 <label class="field">
                   <span>From Date</span>
                   <input id="exportFromDate" type="date" autocomplete="off">
@@ -461,12 +468,15 @@
                   <span>To Date</span>
                   <input id="exportToDate" type="date" autocomplete="off">
                 </label>
-                <label class="field export-toggle-field">
-                  <span>Include Rule Reports</span>
-                  <input id="exportIncludeReports" type="checkbox">
+                <label class="toggle-switch export-toggle-field" for="exportIncludeReports">
+                  <span class="toggle-switch-label">Include Rule Reports</span>
+                  <input id="exportIncludeReports" type="checkbox" class="toggle-switch-input">
+                  <span class="toggle-switch-track" aria-hidden="true"><span class="toggle-switch-knob"></span></span>
                 </label>
-                <button class="export-option" type="button" role="menuitem" data-export="pdf">Export as PDF</button>
-                <button class="export-option" type="button" role="menuitem" data-export="csv">Export as CSV</button>
+                <div class="export-actions">
+                  <button class="button primary export-option" type="button" role="menuitem" data-export="pdf">Export PDF</button>
+                  <button class="button secondary export-option" type="button" role="menuitem" data-export="csv">Export CSV</button>
+                </div>
               </div>
             </div>
           </div>

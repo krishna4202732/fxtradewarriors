@@ -153,6 +153,7 @@ const elements = {
   exportFromDate: document.querySelector("#exportFromDate"),
   exportToDate: document.querySelector("#exportToDate"),
   exportIncludeReports: document.querySelector("#exportIncludeReports"),
+  exportAccount: document.querySelector("#exportAccount"),
   sessionStatusCard: document.querySelector("#sessionStatusCard"),
   sessionClock: document.querySelector("#sessionClock"),
   sessionName: document.querySelector("#sessionName"),
@@ -976,7 +977,12 @@ async function handleExportAction(event) {
     return;
   }
 
-  const entries = loadJournalEntries(getActiveUserId());
+  const allEntries = loadJournalEntries(getActiveUserId());
+  const accountId = elements.exportAccount ? elements.exportAccount.value : "";
+  // Account filter: empty = All Accounts. Applies to entries and rule reports.
+  const entries = accountId
+    ? allEntries.filter((entry) => entry.accountId === accountId)
+    : allEntries;
 
   if (entries.length === 0) {
     showToast("No journal entries to export.");
@@ -993,6 +999,10 @@ async function handleExportAction(event) {
   if (includeRuleReports) {
     try {
       ruleReports = await getDailyRuleReportsInRange(fromDate, toDate);
+
+      if (accountId) {
+        ruleReports = ruleReports.filter((report) => report.accountId === accountId);
+      }
     } catch (error) {
       console.error("Could not load rule reports for export:", error.message);
       showToast("Could not load rule reports; exporting trades only.");
@@ -1091,6 +1101,24 @@ function clearJournalFilterModal() {
   renderJournal();
 }
 
+// Export popup account dropdown (includes "All Accounts"); selection preserved.
+function renderExportAccountOptions(accounts) {
+  if (!elements.exportAccount) {
+    return;
+  }
+
+  const previous = elements.exportAccount.value;
+  elements.exportAccount.innerHTML = [
+    '<option value="">All Accounts</option>',
+    ...accounts.map(
+      (account) => `<option value="${escapeHtml(account.id)}">${escapeHtml(account.name)}</option>`,
+    ),
+  ].join("");
+
+  const stillExists = accounts.some((account) => account.id === previous);
+  elements.exportAccount.value = stillExists ? previous : "";
+}
+
 function renderJournal() {
   if (!activeUser) {
     return;
@@ -1102,6 +1130,7 @@ function renderJournal() {
   renderJournalAccountOptions(accounts);
   renderPerformanceScopeOptions(accounts);
   renderJournalFilterAccountOptions(accounts);
+  renderExportAccountOptions(accounts);
 
   if (elements.manageAccountsCount) {
     setText(elements.manageAccountsCount, String(accounts.length));
