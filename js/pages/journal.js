@@ -48,6 +48,7 @@ import {
 import { requireAuth, initLogout } from "../router.js";
 import { mountSharedComponents } from "../components.js";
 import { setupRuleBook, refreshRuleBook } from "../rulebook.js";
+import { setupRuleReports, refreshRuleReports } from "../ruleReports.js";
 
 const OUTCOME_LABELS = {
   tp: "TP Hit",
@@ -954,6 +955,7 @@ function renderJournal() {
   renderPanelErrors(elements.journalErrorPanel, elements.journalErrorList, []);
   updateJournalPreview();
   refreshRuleBook();
+  refreshRuleReports();
 }
 
 async function handleAccountSubmit(event) {
@@ -1301,6 +1303,7 @@ async function init() {
   updateAccountPhaseVisibility();
   attachEvents();
   setupRuleBook({ getActiveUserId });
+  await setupRuleReports({ getActiveUserId });
   renderJournal();
   startSessionClock();
   setupScrollReveal();

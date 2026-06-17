@@ -21,6 +21,9 @@ const elements = {};
 let ctx = null;
 let selectedAccountId = "";
 let customRules = [];
+// Preserved across saves so the Rule Reports day-rollover marker is never lost
+// when the user edits limits/custom rules.
+let loadedLastTrackedDate = "";
 
 function createId() {
   if (window.crypto && typeof window.crypto.randomUUID === "function") {
@@ -71,6 +74,9 @@ function normalizeRuleBook(raw) {
     customRules: Array.isArray(source.customRules)
       ? source.customRules.map(normalizeCustomRule).filter(Boolean)
       : [],
+    // Day the rule book is currently tracking; used by the Rule Reports system
+    // to archive the previous day and reset on a new day.
+    lastTrackedDate: typeof source.lastTrackedDate === "string" ? source.lastTrackedDate : "",
   };
 }
 
@@ -142,6 +148,7 @@ function buildRuleBook() {
     maxRiskPerTrade: numberOrNull(elements.ruleMaxRiskPerTrade.value),
     maxTradesPerDay: numberOrNull(elements.ruleMaxTradesPerDay.value),
     customRules,
+    lastTrackedDate: loadedLastTrackedDate,
   };
 }
 
@@ -231,6 +238,7 @@ function loadAccount(accountId) {
   elements.ruleMaxRiskPerTrade.value = ruleBook.maxRiskPerTrade ?? "";
   elements.ruleMaxTradesPerDay.value = ruleBook.maxTradesPerDay ?? "";
   customRules = ruleBook.customRules;
+  loadedLastTrackedDate = ruleBook.lastTrackedDate;
 
   applyEnabledState();
   renderPredefinedStatus();
@@ -368,4 +376,43 @@ export function setupRuleBook(context) {
   elements.customRuleForm.addEventListener("submit", handleAddCustomRule);
   elements.customRuleList.addEventListener("click", handleCustomRuleAction);
   elements.saveRuleBook.addEventListener("click", handleSave);
+}
+
+// --- Shared evaluation (reused by the Rule Reports system) ------------------
+
+// Evaluates an account's rules for a given day (defaults to today, IST). Pure
+// read of journal data — no UI. Returns the normalized rule book, the three
+// predefined rule results, and the custom rules.
+export function evaluateAccountRules(userId, accountId, dateKey) {
+  const day = dateKey || getIstDateTimeLocalValue().slice(0, 10);
+  const account = loadAccounts(userId).find((item) => item.id === accountId) || null;
+  const ruleBook = normalizeRuleBook(account ? account.ruleBook : null);
+  const dayEntries = loadJournalEntries(userId).filter(
+    (entry) => entry.accountId === accountId && entryDateKey(entry) === day,
+  );
+
+  return {
+    ruleBook,
+    accountName: account ? account.name : "",
+    reportDate: day,
+    predefined: evaluatePredefinedRules(ruleBook, dayEntries),
+    customRules: ruleBook.customRules,
+  };
+}
+
+// Overall score = passed rules / total rules. Only configured predefined rules
+// (those with a value set) count toward the total; every custom rule counts.
+export function scoreRuleResults(predefined, customRules) {
+  const activePredefined = predefined.filter((rule) => rule.passed !== null);
+  const list = Array.isArray(customRules) ? customRules : [];
+  const totalRules = activePredefined.length + list.length;
+  const passedRules =
+    activePredefined.filter((rule) => rule.passed === true).length +
+    list.filter((rule) => rule.status === true).length;
+
+  return {
+    passedRules,
+    totalRules,
+    overallScorePercent: totalRules > 0 ? Math.round((passedRules / totalRules) * 100) : null,
+  };
 }

@@ -211,3 +211,45 @@ export async function clearCalculatorHistory() {
     await supabase.from(TABLES.CALCULATOR_HISTORY).delete().not("id", "is", null),
   );
 }
+
+// --- Daily rule reports -----------------------------------------------------
+
+function reportToRow(report) {
+  return {
+    id: report.id,
+    account_id: report.accountId || null,
+    report_date: report.reportDate,
+    data: report,
+    created_at: report.createdAt,
+    updated_at: report.updatedAt,
+  };
+}
+
+function rowToReport(row) {
+  return { ...row.data, id: row.id };
+}
+
+export async function getDailyRuleReports() {
+  const supabase = getSupabaseClient();
+  const rows = unwrap(
+    await supabase
+      .from(TABLES.DAILY_RULE_REPORTS)
+      .select("*")
+      .order("report_date", { ascending: false }),
+  );
+  return rows.map(rowToReport);
+}
+
+// Upsert keyed on `<accountId>:<reportDate>` so saving the same day again
+// updates the existing report instead of creating a duplicate.
+export async function upsertDailyRuleReport(report) {
+  const supabase = getSupabaseClient();
+  const row = unwrap(
+    await supabase
+      .from(TABLES.DAILY_RULE_REPORTS)
+      .upsert(reportToRow(report), { onConflict: "id" })
+      .select()
+      .single(),
+  );
+  return rowToReport(row);
+}

@@ -71,4 +71,5 @@ export const TABLES = {
   TRADING_ACCOUNTS: "trading_accounts",
   JOURNAL_ENTRIES: "journal_entries",
   CALCULATOR_HISTORY: "calculator_history",
+  DAILY_RULE_REPORTS: "daily_rule_reports",
 };

@@ -399,6 +399,26 @@
           </div>
         </section>
 
+        <section class="panel rule-reports-panel full-span" aria-labelledby="ruleReportsTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">History</p>
+              <h2 id="ruleReportsTitle">Rule Reports</h2>
+            </div>
+            <button id="saveRuleReport" class="button primary" type="button">Save Today's Rule Report</button>
+          </div>
+
+          <p id="ruleReportsEmpty" class="empty-state">Create a trading account to track rule reports.</p>
+
+          <div id="ruleReportsBody" class="rule-reports-body is-hidden">
+            <label class="field">
+              <span>Account</span>
+              <select id="ruleReportAccount"></select>
+            </label>
+            <div id="ruleReportList" class="rule-report-list" aria-live="polite"></div>
+          </div>
+        </section>
+
         <section class="panel journal-dashboard full-span" aria-labelledby="journalDashboardTitle">
           <div class="panel-heading">
             <div>
