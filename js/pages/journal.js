@@ -132,6 +132,8 @@ const elements = {
   statTotalSwap: document.querySelector("#statTotalSwap"),
   journalEmpty: document.querySelector("#journalEmpty"),
   journalList: document.querySelector("#journalList"),
+  journalFilterDate: document.querySelector("#journalFilterDate"),
+  journalFilterClear: document.querySelector("#journalFilterClear"),
   exportMenu: document.querySelector("#exportMenu"),
   exportToggle: document.querySelector("#exportToggle"),
   exportOptions: document.querySelector("#exportOptions"),
@@ -151,6 +153,7 @@ const elements = {
 };
 
 let activeUser = null;
+let journalFilterDate = "";
 let currentJournalPreview = null;
 let pendingDeleteAccountId = "";
 let sessionClockTimer = null;
@@ -798,15 +801,27 @@ function renderStats(entries) {
   setSignedClass(elements.statWorstTrade, stats.worstTrade);
 }
 
-function renderJournalEntries(entries) {
-  elements.journalEmpty.classList.toggle("is-hidden", entries.length > 0);
+function getEntryDateKey(entry) {
+  return String(entry.entryTime || entry.createdAt || "").slice(0, 10);
+}
 
-  if (entries.length === 0) {
+function renderJournalEntries(entries) {
+  // Date filter is display-only: stats/exports still use the full entry set.
+  const visibleEntries = journalFilterDate
+    ? entries.filter((entry) => getEntryDateKey(entry) === journalFilterDate)
+    : entries;
+
+  elements.journalEmpty.classList.toggle("is-hidden", visibleEntries.length > 0);
+
+  if (visibleEntries.length === 0) {
+    elements.journalEmpty.textContent = journalFilterDate
+      ? "No journal entries for the selected date."
+      : "No journal entries yet.";
     elements.journalList.innerHTML = "";
     return;
   }
 
-  elements.journalList.innerHTML = entries
+  elements.journalList.innerHTML = visibleEntries
     .map((entry) => {
       const safeId = escapeHtml(entry.id);
       const finalPnl = Number(entry.finalTradePnL) || 0;
@@ -1298,6 +1313,21 @@ function attachEvents() {
       closeExportMenu();
     }
   });
+
+  if (elements.journalFilterDate) {
+    elements.journalFilterDate.addEventListener("change", () => {
+      journalFilterDate = elements.journalFilterDate.value;
+      renderJournal();
+    });
+  }
+
+  if (elements.journalFilterClear) {
+    elements.journalFilterClear.addEventListener("click", () => {
+      journalFilterDate = "";
+      elements.journalFilterDate.value = "";
+      renderJournal();
+    });
+  }
 }
 
 async function init() {

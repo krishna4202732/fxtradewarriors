@@ -27,6 +27,7 @@ let ctx = null;
 let selectedAccountId = "";
 let reportsCache = [];
 let midnightTimer = null;
+let filterDate = "";
 // UI-only: which report cards have their custom-rules list expanded. Never
 // persisted — purely local display state, multiple cards may be open at once.
 const expandedReports = new Set();
@@ -258,10 +259,13 @@ function renderReports() {
 
   const reports = reportsCache
     .filter((report) => report.accountId === selectedAccountId)
+    .filter((report) => !filterDate || report.reportDate === filterDate)
     .sort((a, b) => (a.reportDate < b.reportDate ? 1 : -1));
 
   if (reports.length === 0) {
-    elements.ruleReportList.innerHTML = '<p class="empty-state">No rule reports saved yet.</p>';
+    elements.ruleReportList.innerHTML = filterDate
+      ? '<p class="empty-state">No rule report for the selected date.</p>'
+      : '<p class="empty-state">No rule reports saved yet.</p>';
     return;
   }
 
@@ -389,6 +393,8 @@ export async function setupRuleReports(context) {
     "ruleReportsBody",
     "ruleReportAccount",
     "ruleReportList",
+    "ruleReportFilterDate",
+    "ruleReportFilterClear",
   ];
 
   ids.forEach((id) => {
@@ -407,6 +413,21 @@ export async function setupRuleReports(context) {
   });
   elements.saveRuleReport.addEventListener("click", handleSaveReport);
   elements.ruleReportList.addEventListener("click", handleReportToggle);
+
+  if (elements.ruleReportFilterDate) {
+    elements.ruleReportFilterDate.addEventListener("change", () => {
+      filterDate = elements.ruleReportFilterDate.value;
+      renderReports();
+    });
+  }
+
+  if (elements.ruleReportFilterClear) {
+    elements.ruleReportFilterClear.addEventListener("click", () => {
+      filterDate = "";
+      elements.ruleReportFilterDate.value = "";
+      renderReports();
+    });
+  }
 
   try {
     reportsCache = await getDailyRuleReports();

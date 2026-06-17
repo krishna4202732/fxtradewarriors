@@ -3409,6 +3409,18 @@ body:not(.is-app-locked) .pin-gate {
   }
 }
 
+/* History date filter (Saved Trades + Rule Reports) */
+.history-filter {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.history-filter .field {
+  margin: 0;
+}
+
 /* Rule Report history — custom-rules expansion + discipline label */
 .rule-report-discipline {
   font-weight: 600;

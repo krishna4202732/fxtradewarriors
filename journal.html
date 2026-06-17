@@ -411,10 +411,17 @@
           <p id="ruleReportsEmpty" class="empty-state">Create a trading account to track rule reports.</p>
 
           <div id="ruleReportsBody" class="rule-reports-body is-hidden">
-            <label class="field">
-              <span>Account</span>
-              <select id="ruleReportAccount"></select>
-            </label>
+            <div class="history-filter">
+              <label class="field">
+                <span>Account</span>
+                <select id="ruleReportAccount"></select>
+              </label>
+              <label class="field">
+                <span>Filter By Date</span>
+                <input id="ruleReportFilterDate" type="date" autocomplete="off">
+              </label>
+              <button id="ruleReportFilterClear" class="button secondary" type="button">Clear</button>
+            </div>
             <div id="ruleReportList" class="rule-report-list" aria-live="polite"></div>
           </div>
         </section>
@@ -424,6 +431,13 @@
             <div>
               <p class="section-kicker">Dashboard</p>
               <h2 id="journalDashboardTitle">Saved Trades</h2>
+            </div>
+            <div class="history-filter">
+              <label class="field">
+                <span>Filter By Date</span>
+                <input id="journalFilterDate" type="date" autocomplete="off">
+              </label>
+              <button id="journalFilterClear" class="button secondary" type="button">Clear</button>
             </div>
             <div id="exportMenu" class="export-menu">
               <button id="exportToggle" class="button secondary" type="button" aria-haspopup="true"
