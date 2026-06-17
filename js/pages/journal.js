@@ -89,6 +89,7 @@ const elements = {
   journalStopLoss: document.querySelector("#journalStopLoss"),
   journalTakeProfit: document.querySelector("#journalTakeProfit"),
   journalLotSize: document.querySelector("#journalLotSize"),
+  journalCommissionPerLot: document.querySelector("#journalCommissionPerLot"),
   journalEntryTime: document.querySelector("#journalEntryTime"),
   journalExitTime: document.querySelector("#journalExitTime"),
   journalOutcome: document.querySelector("#journalOutcome"),
@@ -98,6 +99,7 @@ const elements = {
   journalPotentialLoss: document.querySelector("#journalPotentialLoss"),
   journalRiskReward: document.querySelector("#journalRiskReward"),
   journalFinalPnl: document.querySelector("#journalFinalPnl"),
+  journalCommission: document.querySelector("#journalCommission"),
   journalBalanceAfter: document.querySelector("#journalBalanceAfter"),
   journalDuration: document.querySelector("#journalDuration"),
   journalEntrySession: document.querySelector("#journalEntrySession"),
@@ -120,6 +122,7 @@ const elements = {
   statAverageRr: document.querySelector("#statAverageRr"),
   statBestTrade: document.querySelector("#statBestTrade"),
   statWorstTrade: document.querySelector("#statWorstTrade"),
+  statTotalCommission: document.querySelector("#statTotalCommission"),
   journalEmpty: document.querySelector("#journalEmpty"),
   journalList: document.querySelector("#journalList"),
   exportMenu: document.querySelector("#exportMenu"),
@@ -176,6 +179,7 @@ function resetJournalForm() {
   elements.journalStopLoss.value = DEFAULT_STATE.stopLoss;
   elements.journalTakeProfit.value = DEFAULT_STATE.takeProfit;
   elements.journalLotSize.value = "0.01";
+  elements.journalCommissionPerLot.value = "5";
   elements.journalOutcome.value = "tp";
   elements.journalEntryTime.value = getIstDateTimeLocalValue();
   elements.journalExitTime.value = getIstDateTimeLocalValue();
@@ -343,6 +347,7 @@ function readJournalInput() {
     stopLoss: parseNumber(elements.journalStopLoss.value),
     takeProfit: parseNumber(elements.journalTakeProfit.value),
     lotSize: parseNumber(elements.journalLotSize.value),
+    commissionPerLot: parseNumber(elements.journalCommissionPerLot.value),
     entryTime: elements.journalEntryTime.value,
     exitTime: elements.journalExitTime.value,
     outcome: elements.journalOutcome.value,
@@ -382,6 +387,10 @@ function validateJournalInput(input) {
   requirePositiveJournalNumber(input, "stopLoss", "Stop loss", errors);
   requirePositiveJournalNumber(input, "takeProfit", "Take profit", errors);
   requirePositiveJournalNumber(input, "lotSize", "Lot size", errors);
+
+  if (input.commissionPerLot === null || input.commissionPerLot < 0) {
+    errors.push("Commission per lot must be 0 or greater.");
+  }
 
   if (!input.entryTime) {
     errors.push("Time of entry is required.");
@@ -448,12 +457,18 @@ function calculateJournalPreview(input) {
     lotSize: input.lotSize,
   });
 
+  const commissionPaid =
+    Number.isFinite(input.lotSize) && Number.isFinite(input.commissionPerLot)
+      ? input.lotSize * input.commissionPerLot
+      : null;
+
   if (!calculation) {
     return {
       input,
       validation,
       calculation: null,
       finalTradePnL: null,
+      commissionPaid,
       accountBalanceAfter: null,
     };
   }
@@ -483,9 +498,10 @@ function calculateJournalPreview(input) {
     validation,
     calculation,
     finalTradePnL,
+    commissionPaid,
     accountBalanceAfter:
       input.account && Number.isFinite(finalTradePnL)
-        ? input.account.currentBalance + finalTradePnL
+        ? input.account.currentBalance + finalTradePnL - (Number.isFinite(commissionPaid) ? commissionPaid : 0)
         : null,
   };
 }
@@ -501,6 +517,11 @@ function renderJournalPreview(preview) {
   setText(elements.journalDuration, formatDuration(durationMinutes));
   setText(elements.journalEntrySession, entrySession ? entrySession.label : "--");
   setText(elements.journalExitSession, exitSession ? exitSession.label : "--");
+  setText(
+    elements.journalCommission,
+    Number.isFinite(preview.commissionPaid) ? formatSignedCurrency(-preview.commissionPaid) : "--",
+  );
+  setSignedClass(elements.journalCommission, Number.isFinite(preview.commissionPaid) ? -preview.commissionPaid : 0);
 
   if (!preview.calculation) {
     [
@@ -589,13 +610,19 @@ function renderJournalAccountOptions(accounts) {
   setJournalFormDisabled(false);
 }
 
-function renderAccounts(accounts) {
+function renderAccounts(accounts, entries = []) {
   elements.journalAccountEmpty.classList.toggle("is-hidden", accounts.length > 0);
 
   if (accounts.length === 0) {
     elements.accountsList.innerHTML = '<p class="empty-state">No trading accounts yet.</p>';
     return;
   }
+
+  const commissionByAccount = new Map();
+  entries.forEach((entry) => {
+    const current = commissionByAccount.get(entry.accountId) || 0;
+    commissionByAccount.set(entry.accountId, current + (Number(entry.commissionPaid) || 0));
+  });
 
   elements.accountsList.innerHTML = accounts
     .map(
@@ -636,6 +663,10 @@ function renderAccounts(accounts) {
                 <div>
                   <span>Current Balance</span>
                   <strong>${formatCurrency(account.currentBalance)}</strong>
+                </div>
+                <div>
+                  <span>Commission Paid</span>
+                  <strong>${formatCurrency(commissionByAccount.get(account.id) || 0)}</strong>
                 </div>
                 ${
                   account.accountType === "prop"
@@ -679,9 +710,14 @@ function calculateStats(entries) {
     (worst, entry) => Math.min(worst, Number(entry.finalTradePnL) || 0),
     0,
   );
+  const totalCommission = entries.reduce(
+    (sum, entry) => sum + (Number(entry.commissionPaid) || 0),
+    0,
+  );
 
   return {
     totalTrades,
+    totalCommission,
     winningTrades,
     losingTrades,
     winRate: totalTrades > 0 ? (winningTrades / totalTrades) * 100 : null,
@@ -710,6 +746,7 @@ function renderStats(entries) {
   setText(elements.statAverageRr, stats.averageRr === null ? "--" : formatRatio(stats.averageRr));
   setText(elements.statBestTrade, stats.totalTrades === 0 ? "--" : formatSignedCurrency(stats.bestTrade));
   setText(elements.statWorstTrade, stats.totalTrades === 0 ? "--" : formatSignedCurrency(stats.worstTrade));
+  setText(elements.statTotalCommission, formatCurrency(stats.totalCommission));
   setSignedClass(elements.statNetPnl, stats.netPnl);
   setSignedClass(elements.statBestTrade, stats.bestTrade);
   setSignedClass(elements.statWorstTrade, stats.worstTrade);
@@ -868,7 +905,7 @@ function renderJournal() {
 
   const { accounts, entries } = recalculateUserJournal(getActiveUserId());
 
-  renderAccounts(accounts);
+  renderAccounts(accounts, entries);
   renderJournalAccountOptions(accounts);
   renderStats(entries);
   renderJournalEntries(entries);
@@ -999,8 +1036,12 @@ async function handleJournalSubmit(event) {
     riskReward: calculation.riskRewardRatio,
     outcome: input.outcome,
     finalTradePnL: roundMoney(preview.finalTradePnL),
+    commissionPerLot: roundMoney(input.commissionPerLot),
+    commissionPaid: roundMoney(input.lotSize * input.commissionPerLot),
     accountBalanceBefore: roundMoney(input.account.currentBalance),
-    accountBalanceAfter: roundMoney(input.account.currentBalance + preview.finalTradePnL),
+    accountBalanceAfter: roundMoney(
+      input.account.currentBalance + preview.finalTradePnL - input.lotSize * input.commissionPerLot,
+    ),
     entryLogic: input.entryLogic,
     exitLogic: input.exitLogic,
     mistakes: input.mistakes,
@@ -1043,6 +1084,8 @@ function renderJournalDetail(entry) {
     ["Potential Loss", formatSignedCurrency(-(Number(entry.potentialLoss) || 0))],
     ["Risk Reward", formatRatio(Number(entry.riskReward) || 0)],
     ["Final Trade PnL", formatSignedCurrency(Number(entry.finalTradePnL) || 0)],
+    ["Commission Per Lot", formatCurrency(Number(entry.commissionPerLot) || 0)],
+    ["Commission Paid", formatSignedCurrency(-(Number(entry.commissionPaid) || 0))],
     ["Balance Before", formatCurrency(entry.accountBalanceBefore)],
     ["Balance After", formatCurrency(entry.accountBalanceAfter)],
   ];

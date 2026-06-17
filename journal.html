@@ -156,6 +156,10 @@
               <dt>Worst Trade</dt>
               <dd id="statWorstTrade">--</dd>
             </div>
+            <div>
+              <dt>Total Commission Paid</dt>
+              <dd id="statTotalCommission">--</dd>
+            </div>
           </dl>
         </section>
 
@@ -207,6 +211,12 @@
               </label>
 
               <label class="field">
+                <span>Commission Per Lot ($)</span>
+                <input id="journalCommissionPerLot" name="journalCommissionPerLot" type="number" min="0" step="0.01"
+                  inputmode="decimal" autocomplete="off" value="5" required>
+              </label>
+
+              <label class="field">
                 <span>Time Of Entry (IST)</span>
                 <input id="journalEntryTime" name="journalEntryTime" type="datetime-local" required>
               </label>
@@ -249,6 +259,10 @@
                 <div>
                   <dt>Final Trade PnL</dt>
                   <dd id="journalFinalPnl">--</dd>
+                </div>
+                <div>
+                  <dt>Commission</dt>
+                  <dd id="journalCommission">--</dd>
                 </div>
                 <div>
                   <dt>Balance After Trade</dt>

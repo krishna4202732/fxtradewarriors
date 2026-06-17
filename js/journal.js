@@ -370,7 +370,12 @@ export function recalculateUserJournal(userId) {
     }
 
     const accountBalanceBefore = roundMoney(account.currentBalance);
-    const accountBalanceAfter = roundMoney(accountBalanceBefore + numberOrZero(entry.finalTradePnL));
+    // Broker commission is a cost: deduct it from the running balance alongside
+    // the trade PnL. Missing on older entries -> 0, so they are unaffected.
+    const commissionPaid = numberOrZero(entry.commissionPaid);
+    const accountBalanceAfter = roundMoney(
+      accountBalanceBefore + numberOrZero(entry.finalTradePnL) - commissionPaid,
+    );
     account.currentBalance = accountBalanceAfter;
 
     return {
