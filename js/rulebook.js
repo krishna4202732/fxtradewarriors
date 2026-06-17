@@ -164,16 +164,17 @@ async function persist() {
 
 // --- Rendering --------------------------------------------------------------
 
+// Compact pill badge: PASS / FAILED / PENDING.
 function statusBadge(passed) {
   if (passed === true) {
-    return '<span class="positive">✓ Pass</span>';
+    return '<span class="status-pill is-pass">Pass</span>';
   }
 
   if (passed === false) {
-    return '<span class="negative">✗ Fail</span>';
+    return '<span class="status-pill is-fail">Failed</span>';
   }
 
-  return "<span>—</span>";
+  return '<span class="status-pill is-pending">Pending</span>';
 }
 
 function renderPredefinedStatus() {
@@ -183,8 +184,8 @@ function renderPredefinedStatus() {
   elements.ruleBookStatus.innerHTML = rows
     .map(
       (row) => `
-        <div class="rule-status-item">
-          <div>
+        <div class="rule-status-row">
+          <div class="rule-status-info">
             <strong>${escapeHtml(row.label)}</strong>
             <span>${escapeHtml(row.detail)}</span>
           </div>
@@ -204,18 +205,23 @@ function renderCustomRules() {
   elements.customRuleList.innerHTML = customRules
     .map(
       (rule) => `
-        <div class="rule-item" data-rule-id="${escapeHtml(rule.id)}">
-          <div>
+        <article class="custom-rule-card" data-rule-id="${escapeHtml(rule.id)}">
+          <div class="custom-rule-body">
             <strong>${escapeHtml(rule.title)}</strong>
             ${rule.description ? `<p>${escapeHtml(rule.description)}</p>` : ""}
           </div>
-          <div class="rule-item-actions">
-            <button class="button secondary" type="button" data-rule-action="toggle" data-id="${escapeHtml(rule.id)}">
-              ${rule.status ? '<span class="positive">✓ Followed</span>' : '<span class="negative">✗ Broken</span>'}
-            </button>
-            <button class="button danger" type="button" data-rule-action="delete" data-id="${escapeHtml(rule.id)}">Remove</button>
+          <div class="custom-rule-footer">
+            <label class="custom-rule-status">
+              <span>Marked As</span>
+              <select data-rule-action="status" data-id="${escapeHtml(rule.id)}">
+                <option value="followed"${rule.status ? " selected" : ""}>Followed</option>
+                <option value="not-followed"${rule.status ? "" : " selected"}>Not Followed</option>
+              </select>
+            </label>
+            <button class="icon-button danger" type="button" data-rule-action="delete" data-id="${escapeHtml(rule.id)}"
+              aria-label="Delete rule" title="Delete rule">🗑</button>
           </div>
-        </div>
+        </article>
       `,
     )
     .join("");
@@ -285,6 +291,27 @@ export function refreshRuleBook() {
   }
 }
 
+function openCustomRuleModal() {
+  if (!selectedAccountId) {
+    return;
+  }
+
+  elements.customRuleForm.reset();
+  elements.customRuleModal.classList.remove("is-hidden");
+  document.body.classList.add("is-modal-open");
+  elements.customRuleTitle.focus();
+}
+
+function closeCustomRuleModal() {
+  elements.customRuleModal.classList.add("is-hidden");
+  if (
+    !elements.accountDeleteDialog ||
+    elements.accountDeleteDialog.classList.contains("is-hidden")
+  ) {
+    document.body.classList.remove("is-modal-open");
+  }
+}
+
 async function handleAddCustomRule(event) {
   event.preventDefault();
 
@@ -294,36 +321,44 @@ async function handleAddCustomRule(event) {
     return;
   }
 
+  // New rules default to Followed (per spec).
   customRules = [
     ...customRules,
-    { id: createId(), title, description: elements.customRuleDescription.value.trim(), status: false },
+    { id: createId(), title, description: elements.customRuleDescription.value.trim(), status: true },
   ];
-  elements.customRuleForm.reset();
+  closeCustomRuleModal();
   renderCustomRules();
   await persist();
   showToast("Custom rule added.");
 }
 
+// Delete via the trash icon button.
 async function handleCustomRuleAction(event) {
-  const button = event.target.closest("button[data-rule-action]");
+  const button = event.target.closest("button[data-rule-action='delete']");
 
   if (!button) {
     return;
   }
 
   const ruleId = button.dataset.id;
+  customRules = customRules.filter((rule) => rule.id !== ruleId);
+  renderCustomRules();
+  await persist();
+}
 
-  if (button.dataset.ruleAction === "toggle") {
-    customRules = customRules.map((rule) =>
-      rule.id === ruleId ? { ...rule, status: !rule.status } : rule,
-    );
-  } else if (button.dataset.ruleAction === "delete") {
-    customRules = customRules.filter((rule) => rule.id !== ruleId);
-  } else {
+// Status dropdown change ("Followed" / "Not Followed").
+async function handleCustomRuleStatusChange(event) {
+  const select = event.target.closest("select[data-rule-action='status']");
+
+  if (!select) {
     return;
   }
 
-  renderCustomRules();
+  const ruleId = select.dataset.id;
+  const followed = select.value === "followed";
+  customRules = customRules.map((rule) =>
+    rule.id === ruleId ? { ...rule, status: followed } : rule,
+  );
   await persist();
 }
 
@@ -351,11 +386,15 @@ export function setupRuleBook(context) {
     "ruleMaxRiskPerTrade",
     "ruleMaxTradesPerDay",
     "ruleBookStatus",
+    "newCustomRule",
+    "customRuleModal",
     "customRuleForm",
     "customRuleTitle",
     "customRuleDescription",
+    "cancelCustomRule",
     "customRuleList",
     "saveRuleBook",
+    "accountDeleteDialog",
   ];
 
   ids.forEach((id) => {
@@ -373,8 +412,16 @@ export function setupRuleBook(context) {
   [elements.ruleMaxDailyRisk, elements.ruleMaxRiskPerTrade, elements.ruleMaxTradesPerDay].forEach((input) =>
     input.addEventListener("input", renderPredefinedStatus),
   );
+  elements.newCustomRule.addEventListener("click", openCustomRuleModal);
+  elements.cancelCustomRule.addEventListener("click", closeCustomRuleModal);
+  elements.customRuleModal.addEventListener("click", (event) => {
+    if (event.target === elements.customRuleModal) {
+      closeCustomRuleModal();
+    }
+  });
   elements.customRuleForm.addEventListener("submit", handleAddCustomRule);
   elements.customRuleList.addEventListener("click", handleCustomRuleAction);
+  elements.customRuleList.addEventListener("change", handleCustomRuleStatusChange);
   elements.saveRuleBook.addEventListener("click", handleSave);
 }
 

@@ -356,9 +356,10 @@
               <p class="section-kicker">Discipline</p>
               <h2 id="ruleBookTitle">Rule Book</h2>
             </div>
-            <label class="field rulebook-enable">
-              <span>Enable Rule Book</span>
-              <input id="ruleBookEnabled" type="checkbox">
+            <label class="toggle-switch rulebook-enable" for="ruleBookEnabled">
+              <span class="toggle-switch-label">Enable Rulebook For This Account</span>
+              <input id="ruleBookEnabled" type="checkbox" class="toggle-switch-input">
+              <span class="toggle-switch-track" aria-hidden="true"><span class="toggle-switch-knob"></span></span>
             </label>
           </div>
 
@@ -371,38 +372,36 @@
             </label>
 
             <div id="ruleBookContent" class="rulebook-content is-hidden">
-              <div class="form-grid">
-                <label class="field">
-                  <span>Max Daily Risk Cap ($)</span>
-                  <input id="ruleMaxDailyRisk" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off">
-                </label>
-                <label class="field">
-                  <span>Max Risk Per Trade ($)</span>
-                  <input id="ruleMaxRiskPerTrade" type="number" min="0" step="0.01" inputmode="decimal"
-                    autocomplete="off">
-                </label>
-                <label class="field">
-                  <span>Max Trades Per Day</span>
-                  <input id="ruleMaxTradesPerDay" type="number" min="0" step="1" inputmode="numeric" autocomplete="off">
-                </label>
-              </div>
+              <div class="rulebook-grid">
+                <section class="rulebook-section">
+                  <h3 class="rulebook-section-title">Automated Rules</h3>
+                  <div class="form-grid">
+                    <label class="field">
+                      <span>Max Daily Risk Cap ($)</span>
+                      <input id="ruleMaxDailyRisk" type="number" min="0" step="0.01" inputmode="decimal"
+                        autocomplete="off">
+                    </label>
+                    <label class="field">
+                      <span>Max Risk Per Trade ($)</span>
+                      <input id="ruleMaxRiskPerTrade" type="number" min="0" step="0.01" inputmode="decimal"
+                        autocomplete="off">
+                    </label>
+                    <label class="field">
+                      <span>Max Trades Per Day</span>
+                      <input id="ruleMaxTradesPerDay" type="number" min="0" step="1" inputmode="numeric"
+                        autocomplete="off">
+                    </label>
+                  </div>
+                  <div id="ruleBookStatus" class="rulebook-status" aria-live="polite"></div>
+                </section>
 
-              <div id="ruleBookStatus" class="rulebook-status" aria-live="polite"></div>
-
-              <div class="rulebook-custom">
-                <h3>Custom Rules</h3>
-                <form id="customRuleForm" class="form-grid">
-                  <label class="field">
-                    <span>Rule Title</span>
-                    <input id="customRuleTitle" type="text" autocomplete="off" required>
-                  </label>
-                  <label class="field">
-                    <span>Description</span>
-                    <input id="customRuleDescription" type="text" autocomplete="off">
-                  </label>
-                  <button class="button secondary" type="submit">Add Custom Rule</button>
-                </form>
-                <div id="customRuleList" class="rule-list" aria-live="polite"></div>
+                <section class="rulebook-section">
+                  <div class="rulebook-section-head">
+                    <h3 class="rulebook-section-title">Custom Rules</h3>
+                    <button id="newCustomRule" class="button secondary" type="button">+ New Custom Rule</button>
+                  </div>
+                  <div id="customRuleList" class="rule-list" aria-live="polite"></div>
+                </section>
               </div>
 
               <button id="saveRuleBook" class="button primary" type="button">Save Rule Book</button>
@@ -505,6 +504,30 @@
         <button id="closeManageAccounts" class="button secondary" type="button" aria-label="Close">Close</button>
       </div>
       <div id="accountsList" class="accounts-list" aria-live="polite"></div>
+    </div>
+  </div>
+  <div id="customRuleModal" class="modal-overlay is-hidden" role="dialog" aria-modal="true"
+    aria-labelledby="customRuleModalTitle">
+    <div class="modal-card">
+      <div>
+        <p class="section-kicker">Custom Rule</p>
+        <h2 id="customRuleModalTitle">New Custom Rule</h2>
+      </div>
+      <form id="customRuleForm">
+        <label class="field">
+          <span>Rule Title</span>
+          <input id="customRuleTitle" type="text" autocomplete="off" placeholder="e.g. No revenge trading" required>
+        </label>
+        <label class="field">
+          <span>Description</span>
+          <input id="customRuleDescription" type="text" autocomplete="off"
+            placeholder="Optional context for this rule">
+        </label>
+        <div class="button-row modal-actions">
+          <button id="cancelCustomRule" class="button secondary" type="button">Cancel</button>
+          <button class="button primary" type="submit">Create Rule</button>
+        </div>
+      </form>
     </div>
   </div>
   <div id="accountDeleteDialog" class="modal-overlay is-hidden" role="dialog" aria-modal="true"
