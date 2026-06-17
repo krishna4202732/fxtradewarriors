@@ -122,19 +122,49 @@ function setMode(nextMode) {
 
   const view = VIEWS[mode] || VIEWS.login;
 
-  elements.displayNameField.hidden = !view.displayName;
-  emailField().hidden = !view.email;
-  elements.passwordField.hidden = !view.password;
-  elements.googleLogin.hidden = !view.google;
-  elements.forgotPassword.hidden = !view.forgot;
-  elements.toggleMode.hidden = !view.toggleMode;
-  elements.backToLogin.hidden = !view.backToLogin;
-  elements.backToOverview.hidden = !view.backToOverview;
+  // ---------- DISPLAY NAME ----------
+  elements.displayNameField.style.display =
+    view.displayName ? "" : "none";
 
+  // ---------- EMAIL ----------
+  emailField().style.display =
+    view.email ? "" : "none";
+
+  // ---------- PASSWORD ----------
+  elements.passwordField.style.display =
+    view.password ? "" : "none";
+
+  // ---------- GOOGLE ----------
+  elements.googleLogin.style.display =
+    view.google ? "" : "none";
+
+  // ---------- FORGOT PASSWORD ----------
+  elements.forgotPassword.style.display =
+    view.forgot ? "" : "none";
+
+  // ---------- CREATE ACCOUNT ----------
+  elements.toggleMode.style.display =
+    view.toggleMode ? "" : "none";
+
+  // ---------- BACK TO LOGIN ----------
+  elements.backToLogin.style.display =
+    view.backToLogin ? "" : "none";
+
+  // ---------- BACK TO OVERVIEW ----------
+  elements.backToOverview.style.display =
+    view.backToOverview ? "" : "none";
+
+  // ---------- TEXT ----------
   elements.authSubtitle.textContent = view.subtitle;
+
   elements.authSubmit.textContent = view.submit;
+
   elements.toggleMode.textContent = "Create an account";
-  elements.loginPassword.setAttribute("autocomplete", view.passwordAutocomplete);
+
+  elements.loginPassword.setAttribute(
+    "autocomplete",
+    view.passwordAutocomplete
+  );
 }
 
 // Recovery links arrive as `…/login.html#access_token=…&type=recovery`. Detect
@@ -240,7 +270,7 @@ async function handleSendResetLink() {
 }
 
 function handleToggleMode() {
-  setMode(mode === "signup" ? "login" : "signup");
+  setMode("signup");
 }
 
 function attachEvents() {
