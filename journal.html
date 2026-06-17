@@ -337,6 +337,68 @@
           </form>
         </section>
 
+        <section class="panel rulebook-panel full-span" aria-labelledby="ruleBookTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Discipline</p>
+              <h2 id="ruleBookTitle">Rule Book</h2>
+            </div>
+            <label class="field rulebook-enable">
+              <span>Enable Rule Book</span>
+              <input id="ruleBookEnabled" type="checkbox">
+            </label>
+          </div>
+
+          <p id="ruleBookEmpty" class="empty-state">Create a trading account to use the rule book.</p>
+
+          <div id="ruleBookBody" class="rulebook-body is-hidden">
+            <label class="field">
+              <span>Account</span>
+              <select id="ruleBookAccount"></select>
+            </label>
+
+            <div id="ruleBookContent" class="rulebook-content is-hidden">
+              <div class="form-grid">
+                <label class="field">
+                  <span>Max Daily Risk Cap ($)</span>
+                  <input id="ruleMaxDailyRisk" type="number" min="0" step="0.01" inputmode="decimal"
+                    autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Max Risk Per Trade ($)</span>
+                  <input id="ruleMaxRiskPerTrade" type="number" min="0" step="0.01" inputmode="decimal"
+                    autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Max Trades Per Day</span>
+                  <input id="ruleMaxTradesPerDay" type="number" min="0" step="1" inputmode="numeric"
+                    autocomplete="off">
+                </label>
+              </div>
+
+              <div id="ruleBookStatus" class="rulebook-status" aria-live="polite"></div>
+
+              <div class="rulebook-custom">
+                <h3>Custom Rules</h3>
+                <form id="customRuleForm" class="form-grid">
+                  <label class="field">
+                    <span>Rule Title</span>
+                    <input id="customRuleTitle" type="text" autocomplete="off" required>
+                  </label>
+                  <label class="field">
+                    <span>Description</span>
+                    <input id="customRuleDescription" type="text" autocomplete="off">
+                  </label>
+                  <button class="button secondary" type="submit">Add Custom Rule</button>
+                </form>
+                <div id="customRuleList" class="rule-list" aria-live="polite"></div>
+              </div>
+
+              <button id="saveRuleBook" class="button primary" type="button">Save Rule Book</button>
+            </div>
+          </div>
+        </section>
+
         <section class="panel journal-dashboard full-span" aria-labelledby="journalDashboardTitle">
           <div class="panel-heading">
             <div>

@@ -311,6 +311,23 @@ export async function createAccount(userId, accountInput) {
   return account;
 }
 
+// Persist a rule book onto its account. The rule book travels inside the
+// account's JSONB `data`, so no schema change is needed and it stays scoped to
+// the account. Returns the updated account, or null if the account is gone.
+export async function updateAccountRuleBook(userId, accountId, ruleBook) {
+  const accounts = readCollection(userId, COLLECTIONS.ACCOUNTS);
+  const target = accounts.find((account) => account.id === accountId);
+
+  if (!target) {
+    return null;
+  }
+
+  target.ruleBook = ruleBook;
+  writeCollection(userId, COLLECTIONS.ACCOUNTS, accounts);
+  await db.upsertAccount(target);
+  return target;
+}
+
 export async function addJournalEntry(userId, entryInput) {
   const entry = {
     id: createId(),
