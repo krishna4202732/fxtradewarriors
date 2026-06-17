@@ -415,23 +415,15 @@
               <p class="section-kicker">History</p>
               <h2 id="ruleReportsTitle">Rule Reports</h2>
             </div>
-            <button id="saveRuleReport" class="button primary" type="button">Save Today's Rule Report</button>
+            <div class="panel-heading-actions">
+              <button id="ruleReportFilters" class="button secondary" type="button">🔎 Filters</button>
+              <button id="saveRuleReport" class="button primary" type="button">Save Today's Rule Report</button>
+            </div>
           </div>
 
           <p id="ruleReportsEmpty" class="empty-state">Create a trading account to track rule reports.</p>
 
           <div id="ruleReportsBody" class="rule-reports-body is-hidden">
-            <div class="history-filter">
-              <label class="field">
-                <span>Account</span>
-                <select id="ruleReportAccount"></select>
-              </label>
-              <label class="field">
-                <span>Filter By Date</span>
-                <input id="ruleReportFilterDate" type="date" autocomplete="off">
-              </label>
-              <button id="ruleReportFilterClear" class="button secondary" type="button">Clear</button>
-            </div>
             <div id="ruleReportList" class="rule-report-list" aria-live="polite"></div>
           </div>
         </section>
@@ -442,13 +434,7 @@
               <p class="section-kicker">Dashboard</p>
               <h2 id="journalDashboardTitle">Saved Trades</h2>
             </div>
-            <div class="history-filter">
-              <label class="field">
-                <span>Filter By Date</span>
-                <input id="journalFilterDate" type="date" autocomplete="off">
-              </label>
-              <button id="journalFilterClear" class="button secondary" type="button">Clear</button>
-            </div>
+            <button id="journalFilters" class="button secondary" type="button">🔎 Filters</button>
             <div id="exportMenu" class="export-menu">
               <button id="exportToggle" class="button secondary" type="button" aria-haspopup="true"
                 aria-expanded="false" aria-controls="exportOptions">Export &#9662;</button>
@@ -504,6 +490,74 @@
         <button id="closeManageAccounts" class="button secondary" type="button" aria-label="Close">Close</button>
       </div>
       <div id="accountsList" class="accounts-list" aria-live="polite"></div>
+    </div>
+  </div>
+  <div id="journalFilterModal" class="modal-overlay is-hidden" role="dialog" aria-modal="true"
+    aria-labelledby="journalFilterTitle">
+    <div class="modal-card filter-modal-card">
+      <div class="filter-modal-head">
+        <div>
+          <p class="section-kicker">Filters</p>
+          <h2 id="journalFilterTitle">Journal Filters</h2>
+        </div>
+        <button id="closeJournalFilter" class="button secondary" type="button" aria-label="Close">Close</button>
+      </div>
+      <div class="filter-modal-body">
+        <label class="field">
+          <span>Account</span>
+          <select id="journalFilterAccount">
+            <option value="">All Accounts</option>
+          </select>
+        </label>
+        <div class="form-grid">
+          <label class="field">
+            <span>Start Date</span>
+            <input id="journalFilterStart" type="date" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>End Date</span>
+            <input id="journalFilterEnd" type="date" autocomplete="off">
+          </label>
+        </div>
+      </div>
+      <div class="button-row modal-actions filter-modal-actions">
+        <button id="journalFilterClearBtn" class="button secondary" type="button">Clear Filters</button>
+        <button id="journalFilterCancel" class="button secondary" type="button">Cancel</button>
+        <button id="journalFilterApply" class="button primary" type="button">Apply Filters</button>
+      </div>
+    </div>
+  </div>
+  <div id="ruleReportFilterModal" class="modal-overlay is-hidden" role="dialog" aria-modal="true"
+    aria-labelledby="ruleReportFilterTitle">
+    <div class="modal-card filter-modal-card">
+      <div class="filter-modal-head">
+        <div>
+          <p class="section-kicker">Filters</p>
+          <h2 id="ruleReportFilterTitle">Rule Report Filters</h2>
+        </div>
+        <button id="closeRuleReportFilter" class="button secondary" type="button" aria-label="Close">Close</button>
+      </div>
+      <div class="filter-modal-body">
+        <label class="field">
+          <span>Account</span>
+          <select id="ruleReportAccount"></select>
+        </label>
+        <div class="form-grid">
+          <label class="field">
+            <span>Start Date</span>
+            <input id="ruleReportFilterStart" type="date" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>End Date</span>
+            <input id="ruleReportFilterEnd" type="date" autocomplete="off">
+          </label>
+        </div>
+      </div>
+      <div class="button-row modal-actions filter-modal-actions">
+        <button id="ruleReportFilterClearBtn" class="button secondary" type="button">Clear Filters</button>
+        <button id="ruleReportFilterCancel" class="button secondary" type="button">Cancel</button>
+        <button id="ruleReportFilterApply" class="button primary" type="button">Apply Filters</button>
+      </div>
     </div>
   </div>
   <div id="customRuleModal" class="modal-overlay is-hidden" role="dialog" aria-modal="true"

@@ -137,8 +137,15 @@ const elements = {
   performanceScope: document.querySelector("#performanceScope"),
   journalEmpty: document.querySelector("#journalEmpty"),
   journalList: document.querySelector("#journalList"),
-  journalFilterDate: document.querySelector("#journalFilterDate"),
-  journalFilterClear: document.querySelector("#journalFilterClear"),
+  journalFilters: document.querySelector("#journalFilters"),
+  journalFilterModal: document.querySelector("#journalFilterModal"),
+  closeJournalFilter: document.querySelector("#closeJournalFilter"),
+  journalFilterAccount: document.querySelector("#journalFilterAccount"),
+  journalFilterStart: document.querySelector("#journalFilterStart"),
+  journalFilterEnd: document.querySelector("#journalFilterEnd"),
+  journalFilterApply: document.querySelector("#journalFilterApply"),
+  journalFilterCancel: document.querySelector("#journalFilterCancel"),
+  journalFilterClearBtn: document.querySelector("#journalFilterClearBtn"),
   exportMenu: document.querySelector("#exportMenu"),
   exportToggle: document.querySelector("#exportToggle"),
   exportOptions: document.querySelector("#exportOptions"),
@@ -158,7 +165,8 @@ const elements = {
 };
 
 let activeUser = null;
-let journalFilterDate = "";
+// Journal History filters (persist until Clear or page refresh).
+const journalFilters = { accountId: "", startDate: "", endDate: "" };
 let performanceScopeId = "";
 let currentJournalPreview = null;
 let pendingDeleteAccountId = "";
@@ -811,17 +819,40 @@ function getEntryDateKey(entry) {
   return String(entry.entryTime || entry.createdAt || "").slice(0, 10);
 }
 
+function journalFiltersActive() {
+  return Boolean(journalFilters.accountId || journalFilters.startDate || journalFilters.endDate);
+}
+
+// Display-only: filter the shown rows by account + date range. Stats/exports
+// still operate on the full entry set.
+function applyJournalFilters(entries) {
+  return entries.filter((entry) => {
+    if (journalFilters.accountId && entry.accountId !== journalFilters.accountId) {
+      return false;
+    }
+
+    const key = getEntryDateKey(entry);
+
+    if (journalFilters.startDate && key < journalFilters.startDate) {
+      return false;
+    }
+
+    if (journalFilters.endDate && key > journalFilters.endDate) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
 function renderJournalEntries(entries) {
-  // Date filter is display-only: stats/exports still use the full entry set.
-  const visibleEntries = journalFilterDate
-    ? entries.filter((entry) => getEntryDateKey(entry) === journalFilterDate)
-    : entries;
+  const visibleEntries = applyJournalFilters(entries);
 
   elements.journalEmpty.classList.toggle("is-hidden", visibleEntries.length > 0);
 
   if (visibleEntries.length === 0) {
-    elements.journalEmpty.textContent = journalFilterDate
-      ? "No journal entries for the selected date."
+    elements.journalEmpty.textContent = journalFiltersActive()
+      ? "No journal entries match the selected filters."
       : "No journal entries yet.";
     elements.journalList.innerHTML = "";
     return;
@@ -1006,6 +1037,59 @@ function renderPerformanceScopeOptions(accounts) {
   elements.performanceScope.value = performanceScopeId;
 }
 
+// Journal filter modal account dropdown (includes "All Accounts").
+function renderJournalFilterAccountOptions(accounts) {
+  if (!elements.journalFilterAccount) {
+    return;
+  }
+
+  const stillExists = accounts.some((account) => account.id === journalFilters.accountId);
+
+  if (!stillExists) {
+    journalFilters.accountId = "";
+  }
+
+  elements.journalFilterAccount.innerHTML = [
+    '<option value="">All Accounts</option>',
+    ...accounts.map(
+      (account) => `<option value="${escapeHtml(account.id)}">${escapeHtml(account.name)}</option>`,
+    ),
+  ].join("");
+  elements.journalFilterAccount.value = journalFilters.accountId;
+}
+
+function openJournalFilterModal() {
+  // Seed the controls with the active filter state.
+  elements.journalFilterAccount.value = journalFilters.accountId;
+  elements.journalFilterStart.value = journalFilters.startDate;
+  elements.journalFilterEnd.value = journalFilters.endDate;
+  elements.journalFilterModal.classList.remove("is-hidden");
+  document.body.classList.add("is-modal-open");
+}
+
+function closeJournalFilterModal() {
+  elements.journalFilterModal.classList.add("is-hidden");
+  document.body.classList.remove("is-modal-open");
+}
+
+function applyJournalFilterModal() {
+  journalFilters.accountId = elements.journalFilterAccount.value;
+  journalFilters.startDate = elements.journalFilterStart.value;
+  journalFilters.endDate = elements.journalFilterEnd.value;
+  closeJournalFilterModal();
+  renderJournal();
+}
+
+function clearJournalFilterModal() {
+  journalFilters.accountId = "";
+  journalFilters.startDate = "";
+  journalFilters.endDate = "";
+  elements.journalFilterAccount.value = "";
+  elements.journalFilterStart.value = "";
+  elements.journalFilterEnd.value = "";
+  renderJournal();
+}
+
 function renderJournal() {
   if (!activeUser) {
     return;
@@ -1016,6 +1100,7 @@ function renderJournal() {
   renderAccounts(accounts, entries);
   renderJournalAccountOptions(accounts);
   renderPerformanceScopeOptions(accounts);
+  renderJournalFilterAccountOptions(accounts);
 
   if (elements.manageAccountsCount) {
     setText(elements.manageAccountsCount, String(accounts.length));
@@ -1398,18 +1483,16 @@ function attachEvents() {
     }
   });
 
-  if (elements.journalFilterDate) {
-    elements.journalFilterDate.addEventListener("change", () => {
-      journalFilterDate = elements.journalFilterDate.value;
-      renderJournal();
-    });
-  }
-
-  if (elements.journalFilterClear) {
-    elements.journalFilterClear.addEventListener("click", () => {
-      journalFilterDate = "";
-      elements.journalFilterDate.value = "";
-      renderJournal();
+  if (elements.journalFilters) {
+    elements.journalFilters.addEventListener("click", openJournalFilterModal);
+    elements.closeJournalFilter.addEventListener("click", closeJournalFilterModal);
+    elements.journalFilterCancel.addEventListener("click", closeJournalFilterModal);
+    elements.journalFilterApply.addEventListener("click", applyJournalFilterModal);
+    elements.journalFilterClearBtn.addEventListener("click", clearJournalFilterModal);
+    elements.journalFilterModal.addEventListener("click", (event) => {
+      if (event.target === elements.journalFilterModal) {
+        closeJournalFilterModal();
+      }
     });
   }
 }

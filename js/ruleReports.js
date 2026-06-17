@@ -27,7 +27,8 @@ let ctx = null;
 let selectedAccountId = "";
 let reportsCache = [];
 let midnightTimer = null;
-let filterDate = "";
+// Rule Report History filters (persist until Clear or refresh).
+const reportFilters = { startDate: "", endDate: "" };
 // UI-only: which report cards have their custom-rules list expanded. Never
 // persisted — purely local display state, multiple cards may be open at once.
 const expandedReports = new Set();
@@ -158,12 +159,15 @@ function scheduleMidnightRollover() {
 
 // --- Rendering --------------------------------------------------------------
 
+// Compact pill badge: PASS / FAILED / PENDING.
 function resultBadge(result) {
   if (!result || result.passed === null || result.passed === undefined) {
-    return '<span>—</span>';
+    return '<span class="status-pill is-pending">Pending</span>';
   }
 
-  return result.passed ? '<span class="positive">✓</span>' : '<span class="negative">✗</span>';
+  return result.passed
+    ? '<span class="status-pill is-pass">Pass</span>'
+    : '<span class="status-pill is-fail">Failed</span>';
 }
 
 function scoreLabel(report) {
@@ -190,7 +194,7 @@ function customRulesLabel(report) {
 }
 
 // Discipline label derived from the overall score percent. Returned as
-// { emoji, text } so the card can render an at-a-glance verdict next to the score.
+// { tone, text } so the card can render an at-a-glance verdict.
 function disciplineLabel(report) {
   const percent = report.overallScorePercent;
 
@@ -199,18 +203,22 @@ function disciplineLabel(report) {
   }
 
   if (percent >= 90) {
-    return { emoji: "🟢", text: "Excellent" };
+    return { tone: "excellent", text: "Excellent" };
   }
 
   if (percent >= 70) {
-    return { emoji: "🟡", text: "Good" };
+    return { tone: "good", text: "Good" };
   }
 
-  if (percent >= 40) {
-    return { emoji: "🟠", text: "Needs Improvement" };
+  if (percent >= 50) {
+    return { tone: "average", text: "Average" };
   }
 
-  return { emoji: "🔴", text: "Poor Discipline" };
+  if (percent >= 30) {
+    return { tone: "poor", text: "Poor" };
+  }
+
+  return { tone: "bad", text: "Bad" };
 }
 
 // Custom rules ordered violated-first, then followed. Stable within each group.
@@ -259,12 +267,15 @@ function renderReports() {
 
   const reports = reportsCache
     .filter((report) => report.accountId === selectedAccountId)
-    .filter((report) => !filterDate || report.reportDate === filterDate)
+    .filter((report) => !reportFilters.startDate || report.reportDate >= reportFilters.startDate)
+    .filter((report) => !reportFilters.endDate || report.reportDate <= reportFilters.endDate)
     .sort((a, b) => (a.reportDate < b.reportDate ? 1 : -1));
 
+  const rangeActive = Boolean(reportFilters.startDate || reportFilters.endDate);
+
   if (reports.length === 0) {
-    elements.ruleReportList.innerHTML = filterDate
-      ? '<p class="empty-state">No rule report for the selected date.</p>'
+    elements.ruleReportList.innerHTML = rangeActive
+      ? '<p class="empty-state">No rule reports match the selected filters.</p>'
       : '<p class="empty-state">No rule reports saved yet.</p>';
     return;
   }
@@ -276,37 +287,35 @@ function renderReportCard(report) {
   const hasCustomRules = getCustomRules(report).length > 0;
   const isExpanded = expandedReports.has(report.id);
   const discipline = disciplineLabel(report);
+  const fraction = report.totalRules ? `${report.passedRules}/${report.totalRules}` : "—";
   const disciplineMarkup = discipline
-    ? `<span class="rule-report-discipline">${discipline.emoji} ${escapeHtml(discipline.text)}</span>`
-    : "";
+    ? `<span class="discipline-badge is-${discipline.tone}">${escapeHtml(discipline.text)} ${escapeHtml(fraction)}</span>`
+    : `<span class="discipline-badge is-pending">${escapeHtml(fraction)}</span>`;
 
-  // The Custom Rules cell becomes a toggle button only when there are rules to
-  // show. Empty state stays plain text ("No custom rules configured.").
-  const customCell = hasCustomRules
+  // Custom Rules row: a "View Custom Rules" toggle when rules exist.
+  const customRow = hasCustomRules
     ? `<button class="rule-report-custom-toggle" type="button" data-report-toggle="${escapeHtml(report.id)}"
         aria-expanded="${isExpanded ? "true" : "false"}">
-        <span>${escapeHtml(customRulesLabel(report))}</span>
-        <span class="rule-report-chevron" aria-hidden="true">${isExpanded ? "▼" : "▶"}</span>
-      </button>`
-    : `<span>${escapeHtml(customRulesLabel(report))}</span>`;
-
-  const expansionMarkup = hasCustomRules && isExpanded ? customRulesExpansion(report) : "";
+        <span>${isExpanded ? "▼" : "▶"} View Custom Rules (${escapeHtml(customRulesLabel(report))})</span>
+      </button>
+      ${isExpanded ? customRulesExpansion(report) : ""}`
+    : '<span class="rule-report-custom-empty">No custom rules configured.</span>';
 
   return `
-    <article class="rule-report-item">
-      <div class="rule-report-head">
-        <strong>${escapeHtml(formatReportDate(report.reportDate))}</strong>
-        <span>${escapeHtml(report.accountName || "")}</span>
+    <article class="rule-report-card">
+      <div class="rule-report-card-head">
+        <div>
+          <strong>${escapeHtml(formatReportDate(report.reportDate))}</strong>
+          <span>${escapeHtml(report.accountName || "")}</span>
+        </div>
         ${disciplineMarkup}
-        <span class="rule-report-score">${escapeHtml(scoreLabel(report))}</span>
       </div>
-      <dl class="rule-report-grid">
-        <div><dt>Daily Risk</dt><dd>${resultBadge(report.dailyRisk)}</dd></div>
-        <div><dt>Risk / Trade</dt><dd>${resultBadge(report.riskPerTrade)}</dd></div>
-        <div><dt>Trades / Day</dt><dd>${resultBadge(report.tradesPerDay)}</dd></div>
-        <div class="rule-report-custom-cell"><dt>Custom Rules</dt><dd>${customCell}</dd></div>
-      </dl>
-      ${expansionMarkup}
+      <div class="rule-report-statuses">
+        <div class="rule-report-status"><span>Daily Risk</span>${resultBadge(report.dailyRisk)}</div>
+        <div class="rule-report-status"><span>Risk Per Trade</span>${resultBadge(report.riskPerTrade)}</div>
+        <div class="rule-report-status"><span>Trades Per Day</span>${resultBadge(report.tradesPerDay)}</div>
+      </div>
+      <div class="rule-report-custom-section">${customRow}</div>
     </article>
   `;
 }
@@ -366,6 +375,35 @@ export function refreshRuleReports() {
   renderReports();
 }
 
+function openReportFilterModal() {
+  elements.ruleReportAccount.value = selectedAccountId;
+  elements.ruleReportFilterStart.value = reportFilters.startDate;
+  elements.ruleReportFilterEnd.value = reportFilters.endDate;
+  elements.ruleReportFilterModal.classList.remove("is-hidden");
+  document.body.classList.add("is-modal-open");
+}
+
+function closeReportFilterModal() {
+  elements.ruleReportFilterModal.classList.add("is-hidden");
+  document.body.classList.remove("is-modal-open");
+}
+
+function applyReportFilterModal() {
+  selectedAccountId = elements.ruleReportAccount.value;
+  reportFilters.startDate = elements.ruleReportFilterStart.value;
+  reportFilters.endDate = elements.ruleReportFilterEnd.value;
+  closeReportFilterModal();
+  renderReports();
+}
+
+function clearReportFilterModal() {
+  reportFilters.startDate = "";
+  reportFilters.endDate = "";
+  elements.ruleReportFilterStart.value = "";
+  elements.ruleReportFilterEnd.value = "";
+  renderReports();
+}
+
 async function handleSaveReport() {
   const userId = getActiveUserId();
 
@@ -393,8 +431,14 @@ export async function setupRuleReports(context) {
     "ruleReportsBody",
     "ruleReportAccount",
     "ruleReportList",
-    "ruleReportFilterDate",
-    "ruleReportFilterClear",
+    "ruleReportFilters",
+    "ruleReportFilterModal",
+    "closeRuleReportFilter",
+    "ruleReportFilterStart",
+    "ruleReportFilterEnd",
+    "ruleReportFilterApply",
+    "ruleReportFilterCancel",
+    "ruleReportFilterClearBtn",
   ];
 
   ids.forEach((id) => {
@@ -407,25 +451,19 @@ export async function setupRuleReports(context) {
 
   ctx = context;
 
-  elements.ruleReportAccount.addEventListener("change", () => {
-    selectedAccountId = elements.ruleReportAccount.value;
-    renderReports();
-  });
   elements.saveRuleReport.addEventListener("click", handleSaveReport);
   elements.ruleReportList.addEventListener("click", handleReportToggle);
 
-  if (elements.ruleReportFilterDate) {
-    elements.ruleReportFilterDate.addEventListener("change", () => {
-      filterDate = elements.ruleReportFilterDate.value;
-      renderReports();
-    });
-  }
-
-  if (elements.ruleReportFilterClear) {
-    elements.ruleReportFilterClear.addEventListener("click", () => {
-      filterDate = "";
-      elements.ruleReportFilterDate.value = "";
-      renderReports();
+  if (elements.ruleReportFilters) {
+    elements.ruleReportFilters.addEventListener("click", openReportFilterModal);
+    elements.closeRuleReportFilter.addEventListener("click", closeReportFilterModal);
+    elements.ruleReportFilterCancel.addEventListener("click", closeReportFilterModal);
+    elements.ruleReportFilterApply.addEventListener("click", applyReportFilterModal);
+    elements.ruleReportFilterClearBtn.addEventListener("click", clearReportFilterModal);
+    elements.ruleReportFilterModal.addEventListener("click", (event) => {
+      if (event.target === elements.ruleReportFilterModal) {
+        closeReportFilterModal();
+      }
     });
   }
 

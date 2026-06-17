@@ -3725,3 +3725,181 @@ body:not(.is-app-locked) .pin-gate {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== History redesign: filter modals + rule report cards ===== */
+
+.panel-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Filter modal: 700px desktop / 85% tablet / 100% mobile, 80vh internal scroll. */
+.filter-modal-card {
+  width: min(700px, 100%);
+  max-height: 80vh;
+  gap: 16px;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
+
+.filter-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.filter-modal-body {
+  display: grid;
+  gap: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 4px;
+}
+
+.filter-modal-actions {
+  flex-wrap: wrap;
+}
+
+/* Rule report cards. */
+.rule-report-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.rule-report-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--secondary-bg);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+  transition: transform var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast);
+}
+
+.rule-report-card:hover {
+  border-color: var(--line-strong);
+  background: var(--card-hover);
+  transform: translateY(-2px);
+}
+
+.rule-report-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rule-report-card-head strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.rule-report-card-head span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+/* Discipline badge (Excellent 5/5, etc.). */
+.discipline-badge {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.discipline-badge.is-excellent { background: var(--green-soft); color: var(--green); }
+.discipline-badge.is-good { background: var(--blue-soft); color: var(--accent-blue); }
+.discipline-badge.is-average { background: var(--amber-soft); color: var(--warning-amber); }
+.discipline-badge.is-poor,
+.discipline-badge.is-bad { background: var(--red-soft); color: var(--red); }
+.discipline-badge.is-pending { background: var(--chip-bg); color: var(--muted); }
+
+/* Status rows for the three automated rules. */
+.rule-report-statuses {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rule-report-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card-bg);
+  padding: 10px 12px;
+}
+
+.rule-report-status span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.rule-report-custom-section {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.rule-report-custom-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent-blue);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rule-report-custom-empty {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.rule-report-custom-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.rule-report-custom-list .rule-report-custom-rule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card-bg);
+  padding: 10px 12px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 620px) {
+  .rule-report-statuses {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-modal-card {
+    width: 100%;
+    max-height: 85vh;
+  }
+}
