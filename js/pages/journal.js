@@ -130,6 +130,11 @@ const elements = {
   statWorstTrade: document.querySelector("#statWorstTrade"),
   statTotalCommission: document.querySelector("#statTotalCommission"),
   statTotalSwap: document.querySelector("#statTotalSwap"),
+  manageAccountsButton: document.querySelector("#manageAccountsButton"),
+  manageAccountsCount: document.querySelector("#manageAccountsCount"),
+  manageAccountsModal: document.querySelector("#manageAccountsModal"),
+  closeManageAccounts: document.querySelector("#closeManageAccounts"),
+  performanceScope: document.querySelector("#performanceScope"),
   journalEmpty: document.querySelector("#journalEmpty"),
   journalList: document.querySelector("#journalList"),
   journalFilterDate: document.querySelector("#journalFilterDate"),
@@ -154,6 +159,7 @@ const elements = {
 
 let activeUser = null;
 let journalFilterDate = "";
+let performanceScopeId = "";
 let currentJournalPreview = null;
 let pendingDeleteAccountId = "";
 let sessionClockTimer = null;
@@ -976,6 +982,30 @@ async function handleExportAction(event) {
   closeExportMenu();
 }
 
+// Keeps the Performance Scope dropdown in sync with the user's accounts while
+// preserving the current selection (falls back to Overall if it disappeared).
+function renderPerformanceScopeOptions(accounts) {
+  if (!elements.performanceScope) {
+    return;
+  }
+
+  const stillExists = accounts.some((account) => account.id === performanceScopeId);
+
+  if (!stillExists) {
+    performanceScopeId = "";
+  }
+
+  const options = [
+    '<option value="">Overall Performance</option>',
+    ...accounts.map(
+      (account) => `<option value="${escapeHtml(account.id)}">${escapeHtml(account.name)}</option>`,
+    ),
+  ].join("");
+
+  elements.performanceScope.innerHTML = options;
+  elements.performanceScope.value = performanceScopeId;
+}
+
 function renderJournal() {
   if (!activeUser) {
     return;
@@ -985,7 +1015,19 @@ function renderJournal() {
 
   renderAccounts(accounts, entries);
   renderJournalAccountOptions(accounts);
-  renderStats(entries);
+  renderPerformanceScopeOptions(accounts);
+
+  if (elements.manageAccountsCount) {
+    setText(elements.manageAccountsCount, String(accounts.length));
+  }
+
+  // Performance Scope only filters the data source feeding the stats; the
+  // calculation itself is unchanged. Empty scope = overall (every account).
+  const scopedEntries = performanceScopeId
+    ? entries.filter((entry) => entry.accountId === performanceScopeId)
+    : entries;
+
+  renderStats(scopedEntries);
   renderJournalEntries(entries);
   renderPanelErrors(elements.accountErrorPanel, elements.accountErrorList, []);
   renderPanelErrors(elements.journalErrorPanel, elements.journalErrorList, []);
@@ -1043,15 +1085,34 @@ async function handleAccountSubmit(event) {
   showToast("Trading account created.");
 }
 
+function openManageAccounts() {
+  elements.manageAccountsModal.classList.remove("is-hidden");
+  document.body.classList.add("is-modal-open");
+  elements.closeManageAccounts.focus();
+}
+
+function closeManageAccounts() {
+  elements.manageAccountsModal.classList.add("is-hidden");
+  // Keep the page locked if the delete confirmation is still open.
+  if (elements.accountDeleteDialog.classList.contains("is-hidden")) {
+    document.body.classList.remove("is-modal-open");
+  }
+}
+
 function showAccountDeleteDialog(accountId) {
   pendingDeleteAccountId = accountId;
   elements.accountDeleteDialog.classList.remove("is-hidden");
+  document.body.classList.add("is-modal-open");
   elements.confirmDeleteAccount.focus();
 }
 
 function hideAccountDeleteDialog() {
   pendingDeleteAccountId = "";
   elements.accountDeleteDialog.classList.add("is-hidden");
+  // Release the page scroll lock unless the accounts modal is still open.
+  if (elements.manageAccountsModal.classList.contains("is-hidden")) {
+    document.body.classList.remove("is-modal-open");
+  }
 }
 
 function handleAccountAction(event) {
@@ -1286,6 +1347,29 @@ function attachEvents() {
   elements.accountForm.addEventListener("submit", handleAccountSubmit);
   elements.accountType.addEventListener("change", updateAccountPhaseVisibility);
   elements.accountsList.addEventListener("click", handleAccountAction);
+
+  if (elements.manageAccountsButton) {
+    elements.manageAccountsButton.addEventListener("click", openManageAccounts);
+  }
+
+  if (elements.closeManageAccounts) {
+    elements.closeManageAccounts.addEventListener("click", closeManageAccounts);
+  }
+
+  if (elements.manageAccountsModal) {
+    elements.manageAccountsModal.addEventListener("click", (event) => {
+      if (event.target === elements.manageAccountsModal) {
+        closeManageAccounts();
+      }
+    });
+  }
+
+  if (elements.performanceScope) {
+    elements.performanceScope.addEventListener("change", () => {
+      performanceScopeId = elements.performanceScope.value;
+      renderJournal();
+    });
+  }
   elements.cancelDeleteAccount.addEventListener("click", hideAccountDeleteDialog);
   elements.confirmDeleteAccount.addEventListener("click", confirmAccountDelete);
   elements.accountDeleteDialog.addEventListener("click", (event) => {

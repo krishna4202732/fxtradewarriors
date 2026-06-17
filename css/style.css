@@ -2458,6 +2458,87 @@ progress::-moz-progress-bar {
   justify-content: flex-end;
 }
 
+/* Page scroll lock while a modal is open (content behind must not scroll). */
+body.is-modal-open {
+  overflow: hidden;
+}
+
+/* Manage Accounts modal — wide, internally scrollable. */
+.accounts-modal-card {
+  width: min(900px, 100%);
+  max-height: 85vh;
+  gap: 16px;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.accounts-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.accounts-modal-card .accounts-list {
+  margin: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 4px;
+}
+
+/* Count badge on the Manage Accounts button. */
+.count-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent-blue);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* Performance Scope selector sits compactly in the panel heading. */
+.performance-scope {
+  min-width: 180px;
+  max-width: 240px;
+}
+
+/* Responsive performance grid: 4 / 3 / 2 columns. */
+.statistics-panel .stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Compact account cards (~20% less padding, tighter metrics). */
+.accounts-list .account-card {
+  padding: 18px;
+}
+
+@media (max-width: 1180px) {
+  .statistics-panel .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .accounts-modal-card {
+    width: 100%;
+    max-height: 90vh;
+  }
+
+  .statistics-panel .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .performance-scope {
+    max-width: none;
+    width: 100%;
+  }
+}
+
 .site-footer {
   margin-top: 40px;
   border: none;
